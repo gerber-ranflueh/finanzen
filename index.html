@@ -100,7 +100,7 @@ pre,.scroll{overflow-x:auto}
 <div id="msg" role="status"></div>
 <script>
 {
-const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['einstellungen','Einstellungen']];
+const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['anteile','Wer zahlt was'],['einstellungen','Einstellungen']];
 const MAX3A={2020:6826,2021:6883,2022:6883,2023:7056,2024:7056,2025:7258,2026:7258};
 const PSTAT=['Idee','Offerten einholen','Geplant','In Arbeit','Erledigt','Verworfen'];
 const PSTEU=['Unterhalt (abziehbar)','Wertvermehrend (Anlagekosten)','Gemischt','Zu klären','Nicht abziehbar'];
@@ -135,7 +135,7 @@ function years(){const ys=new Set([new Date().getFullYear(),Y]);S.tx.forEach(t=>
 const lo=Math.min(...ys),hi=Math.max(...ys,new Date().getFullYear()+1);for(let y=lo;y<=hi;y++)ys.add(y);$('#year').innerHTML=[...ys].sort((a,b)=>b-a).map(y=>`<option ${y===Y?'selected':''}>${y}</option>`).join('');}
 
 function render(){nav();years();const m=$('#main');if(!S.ok){return}
-m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,einstellungen:vEinst}[view]||vUeb)();bind();setSync();}
+m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,anteile:vAnteile,einstellungen:vEinst}[view]||vUeb)();bind();setSync();}
 
 function tax(y){const T=txY(y);
 const guth=S.acc.filter(a=>!['Hypothek','Säule 3a','Pensionskasse'].includes(a.typ)&&saldo(a,y)!=null);
@@ -195,7 +195,8 @@ t.T.filter(x=>x.bereich==='Haus'&&x.status==='Bezahlt'&&['Unterhalt','Versicheru
 S.acc.filter(a=>!['Pensionskasse','Säule 3a'].includes(a.typ)&&saldo(a,y)==null).forEach(a=>c.push(['Saldo 31.12. fehlt',a.name+' ('+(a.bank||'')+')',null,null,a._id]));
 if(!t.emw)c.push(['Eigenmietwert Kanton fehlt','unter Haus erfassen',null]);if(!t.emwB)c.push(['Eigenmietwert Bund fehlt','unter Haus erfassen',null]);
 return c}
-function vSteuern(){const t=tax(Y),best=Math.max(t.uhB,t.pausch),eff=t.uhB>=t.pausch,bestB=Math.max(t.uhB,t.pauschB),C=checks(Y);
+function vSteuern(){const HE=S.set.heirat;if(HE&&HE>`${Y}-12-31`)return vSteuernGetrennt();
+const t=tax(Y),best=Math.max(t.uhB,t.pausch),eff=t.uhB>=t.pausch,bestB=Math.max(t.uhB,t.pauschB),C=checks(Y);
 const s3={};t.s3a.forEach(x=>s3[x.bereich]=(s3[x.bereich]||0)+(+x.betrag||0));
 return `<div class="row" style="justify-content:space-between"><h2>Steuererklärung ${Y}</h2><button id="copytax">Als Text kopieren</button></div>
 <p class="mut">Zum Übertragen in TaxMe (Kanton Bern). Für Bankkonten mit eSteuerauszug das PDF der Bank direkt hochladen.</p>
@@ -216,7 +217,29 @@ ${t.emw?'':'<p class="mut">Den Eigenmietwert findest du auf der Steuerveranlagun
 ${(()=>{const K=txY(Y).filter(x=>x.kapital);return K.length?`<h3>Kapitalleistungen aus Vorsorge (getrennt besteuert)</h3><table class="stack"><thead><tr><th>Datum</th><th>Person</th><th>Art</th><th class="n">CHF</th></tr></thead><tbody>${K.map(x=>`<tr class="click" data-tx="${esc(x._id)}"><td>${dt(x.datum)}</td><td>${esc(x.bereich)}</td><td>${esc(x.text)}<div class="mut">${esc(x.firma||'')}</div></td><td class="n">${chf(x.betrag)}</td></tr>`).join('')}</tbody></table><p class="mut">Die Vorsorgeeinrichtungen melden diese Bezüge der Steuerverwaltung. Sie werden separat zum Vorsorgetarif veranlagt und nicht zum übrigen Einkommen gezählt. In der Steuererklärung trotzdem angeben.</p>`:''})()}${(()=>{const K=(S.set.kinder||[]).map(k=>k.name).filter(Boolean);if(!K.length)return'';const T=txY(Y);const s=(n,c)=>sum(T.filter(x=>x.bereich===n&&x.kategorie===c&&x.status==='Bezahlt'),x=>x.betrag);
 return `<h3>Kinder</h3><table class="stack"><thead><tr><th>Kind</th><th>Geburt</th><th class="n">Kinderbetreuung</th><th class="n">Krankheitskosten</th><th class="n">Familienzulagen</th></tr></thead><tbody>${(S.set.kinder||[]).map(k=>`<tr><td>${esc(k.name)}</td><td>${k.geburt?dt(k.geburt):'–'}</td><td class="n">${chf(s(k.name,'Kinderbetreuung'))}</td><td class="n">${chf(s(k.name,'Krankheitskosten'))}</td><td class="n">${chf(s(k.name,'Familienzulagen'))}</td></tr>`).join('')}</tbody></table><p class="mut">Für die Kinderabzüge zählt der Stand am Jahresende. Familienzulagen sind Einkommen, Fremdbetreuung ist bis zu einem kantonalen Maximum abziehbar.</p>`})()}<h3>Säule 3a Einzahlungen</h3>${Object.keys(s3).length?`<table>${Object.entries(s3).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${chf(v)}</td></tr>`).join('')}</table>`:'<p class="mut">Keine Einzahlungen erfasst (Kategorie Säule 3a, Bereich = Person).</p>'}`}
 
-function taxText(){const t=tax(Y);let s=`Steuererklärung ${Y} – Familie Gerber\n\nGuthaben (Steuerwert 31.12. / Ertrag)\n`;
+
+/* ===== Steuern getrennt (vor Heirat) ===== */
+function taxP(y,p){const t=tax(y),h=.5,f=a=>a.inhaber==='Gemeinsam'?h:1;
+const own=S.acc.filter(a=>!['Hypothek','Säule 3a','Pensionskasse'].includes(a.typ)&&saldo(a,y)!=null&&(a.inhaber===p||a.inhaber==='Gemeinsam'));
+return{own,f,verm:sum(own,a=>saldo(a,y)*f(a)),ertrag:sum(own,a=>(a.zinsen?.[y]||0)*f(a)),schuld:t.schuld*h,zins:t.zins*h,uh:t.uh*h,vers:t.vers*h,gg:t.gg*h,uhB:t.uhB*h,lst:t.lst*h,emw:t.emw*h,emwB:t.emwB*h,pausch:t.pausch*h,pauschB:t.pauschB*h,pPct:t.pPct,
+s3a:sum(txY(y).filter(x=>x.kategorie==='Säule 3a'&&x.bereich===p&&x.status==='Bezahlt'),x=>x.betrag),kap:txY(y).filter(x=>x.kapital&&x.bereich===p)}}
+function vSteuernGetrennt(){const C=checks(Y),P=S.set.personen||[];
+return `<div class="row" style="justify-content:space-between"><h2>Steuererklärungen ${Y}</h2><button id="copytax">Als Text kopieren</button></div>
+<div class="note" style="margin-bottom:12px">Am 31.12.${Y} wart ihr noch nicht verheiratet (Heirat ${dt(S.set.heirat)}): <b>jede Person reicht eine eigene Steuererklärung ein.</b> Annahme: Liegenschaft, Hypothek und Konten mit Inhaber «Gemeinsam» je 50 %. Anteil bei Bedarf mit der Steuerverwaltung klären.</div>
+<h3>Checkliste: noch offen (${C.length})</h3>${C.length?`<table class="stack"><thead><tr><th>Was</th><th>Betrifft</th><th class="n">CHF</th></tr></thead><tbody>${C.map(c=>`<tr ${c[3]?`class="click" data-tx="${esc(c[3])}"`:c[4]?`class="click" data-acc="${esc(c[4])}"`:''}><td>${tag(c[0])}</td><td>${esc(c[1])}</td><td class="n">${c[2]!=null?chf(c[2]):''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Alles vollständig.</div>'}
+${P.map(p=>{const t=taxP(Y,p),best=Math.max(t.uhB,t.pausch),bestB=Math.max(t.uhB,t.pauschB);return `<h2 style="margin-top:34px;font-size:26px">${esc(p)}</h2>
+<h3>Wertschriften- und Guthabenverzeichnis</h3>${t.own.length?`<table class="stack"><thead><tr><th>Konto</th><th>Anteil</th><th class="n">Steuerwert</th><th class="n">Ertrag</th></tr></thead><tbody>${t.own.map(a=>`<tr><td>${esc(a.name)}<div class="mut">${esc(a.bank||'')}</div></td><td>${t.f(a)<1?'50 %':'100 %'}</td><td class="n">${chf(saldo(a,Y)*t.f(a))}</td><td class="n">${chf((a.zinsen?.[Y]||0)*t.f(a))}</td></tr>`).join('')}<tr class="sum"><td>Total</td><td></td><td class="n">${chf(t.verm)}</td><td class="n">${chf(t.ertrag)}</td></tr></tbody></table>`:'<p class="mut">Keine Konten mit Saldo.</p>'}
+<h3>Schulden und Liegenschaft (Anteil 50 %)</h3><table><thead><tr><th></th><th class="n">Kanton</th><th class="n">Bund</th></tr></thead><tbody>
+<tr><td>Amtlicher Wert Liegenschaft (Vermögen)</td><td class="n">${chf((+S.haus.amtlicherWert||0)*.5)}</td><td></td></tr><tr><td>Hypothek (Schuld 31.12.)</td><td class="n">${chf(t.schuld)}</td><td></td></tr><tr><td>Schuldzinsen</td><td class="n">${chf(t.zins)}</td><td class="n">${chf(t.zins)}</td></tr>
+<tr><td>Eigenmietwert</td><td class="n">${chf(t.emw)}</td><td class="n">${chf(t.emwB)}</td></tr>
+<tr><td>Effektive Kosten (Unterhalt ${chf(t.uh)}, Versicherung ${chf(t.vers)}, Gebühren ${chf(t.gg)})</td><td class="n">${chf(t.uhB)}</td><td class="n">${chf(t.uhB)}</td></tr>
+<tr><td>Pauschalabzug ${t.pPct*100} %</td><td class="n">${chf(t.pausch)}</td><td class="n">${chf(t.pauschB)}</td></tr>
+<tr class="sum"><td>Abzug Liegenschaftskosten (höherer Wert)</td><td class="n">${chf(best)}</td><td class="n">${chf(bestB)}</td></tr>
+<tr><td>Liegenschaftssteuer</td><td class="n">${chf(t.lst)}</td><td class="n">–</td></tr></tbody></table>
+<h3>Vorsorge</h3><table><tr><td>Einzahlungen Säule 3a</td><td class="n">${chf(t.s3a)}</td></tr>${t.kap.map(x=>`<tr><td>Kapitalleistung ${dt(x.datum)}: ${esc(x.text)} <span class="mut">(getrennt besteuert)</span></td><td class="n">${chf(x.betrag)}</td></tr>`).join('')}</table>`}).join('')}`}
+function taxTextGetrennt(){let s='';for(const p of S.set.personen||[]){const t=taxP(Y,p);s+=`Steuererklärung ${Y} – ${p}\nGuthaben:\n`;t.own.forEach(a=>s+=`- ${a.name} (${a.bank||''})${t.f(a)<1?' 50 %':''}: ${chf(saldo(a,Y)*t.f(a))} / Ertrag ${chf((a.zinsen?.[Y]||0)*t.f(a))}\n`);
+s+=`Hypothek 50 %: ${chf(t.schuld)}, Schuldzinsen ${chf(t.zins)}\nEigenmietwert Kanton/Bund: ${chf(t.emw)} / ${chf(t.emwB)}\nLiegenschaftskosten effektiv ${chf(t.uhB)} / Pauschale ${chf(t.pausch)} (Bund ${chf(t.pauschB)})\nLiegenschaftssteuer ${chf(t.lst)}\nSäule 3a: ${chf(t.s3a)}\n`;t.kap.forEach(x=>s+=`Kapitalleistung ${dt(x.datum)} ${x.text}: ${chf(x.betrag)}\n`);s+='\n'}return s}
+function taxText(){const HE=S.set.heirat;if(HE&&HE>`${Y}-12-31`)return taxTextGetrennt();const t=tax(Y);let s=`Steuererklärung ${Y} – Familie Gerber\n\nGuthaben (Steuerwert 31.12. / Ertrag)\n`;
 t.guth.forEach(a=>s+=`- ${a.name} (${a.bank||''}, ${a.inhaber}): ${chf(saldo(a,Y))} / ${chf(a.zinsen?.[Y]||0)}\n`);
 s+=`Total: ${chf(t.verm)} / ${chf(t.ertrag)}\n\nSchulden\n`;t.hyp.forEach(a=>s+=`- ${a.bank||a.name}: ${chf(saldo(a,Y))}, Zinsen ${chf(a.zinsen?.[Y]??t.zins)}\n`);
 s+=`\nLiegenschaft (Formular 21b)\n- Eigenmietwert Kanton/Bund: ${t.emw?chf(t.emw):'fehlt'} / ${t.emwB?chf(t.emwB):'fehlt'}\n- Unterhalt ${chf(t.uh)}, Versicherung ${chf(t.vers)}, Grundgebühren ${chf(t.gg)} = effektiv ${chf(t.uhB)} (zu prüfen: ${chf(t.uhP)})\n- Pauschale Kanton/Bund: ${chf(t.pausch)} / ${chf(t.pauschB)}\n- Liegenschaftssteuer: ${chf(t.lst)}\n`;
@@ -381,10 +404,10 @@ const clean=o=>{const c={...o};delete c._id;return c};
 
 
 function txForm(t){t=t||{datum:new Date().toISOString().slice(0,10),steuerjahr:Y,status:'Bezahlt',bereich:'Haus',kategorie:'Unterhalt'};
-form(t._id?'Buchung bearbeiten':'Neue Buchung',[['datum','Datum','date'],['text','Beschreibung'],['betrag','Betrag bezahlt CHF','number'],['abziehbar','davon steuerlich abziehbar (leer = ganzer Betrag)','number'],['bereich','Bereich','select',bereiche()],['kategorie','Kategorie','select',KAT],['status','Status','select',STATUS],['steuerjahr','Steuerjahr','number'],['firma','Firma / Stelle'],['konto','Bezahlt ab Konto','select',[['',''],...S.acc.map(a=>[a._id,a.name])]],['projekt','Hausprojekt','select',[['',''],...S.proj.map(p=>[p._id,p.name])]],['beleg','Beleg / Archiv-Nr.'],['belege','Belege (Foto oder PDF)','files'],['notiz','Notiz','area']],t,
+form(t._id?'Buchung bearbeiten':'Neue Buchung',[['datum','Datum','date'],['text','Beschreibung'],['betrag','Betrag bezahlt CHF','number'],['abziehbar','davon steuerlich abziehbar (leer = ganzer Betrag)','number'],['bereich','Bereich','select',bereiche()],['kategorie','Kategorie','select',KAT],['status','Status','select',STATUS],['steuerjahr','Steuerjahr','number'],['firma','Firma / Stelle'],['konto','Bezahlt ab Konto','select',[['',''],...S.acc.map(a=>[a._id,a.name])]],['bezahltVon','Bezahlt von (leer = automatisch vom Konto)','select',['',...(S.set.personen||[]),'Gemeinsam']],['projekt','Hausprojekt','select',[['',''],...S.proj.map(p=>[p._id,p.name])]],['beleg','Beleg / Archiv-Nr.'],['belege','Belege (Foto oder PDF)','files'],['notiz','Notiz','area']],t,
 o=>put('tx',t._id,{...t,...o}),t._id&&(()=>delDoc('tx',t._id)))}
 function accForm(a){a=a||{typ:'Privatkonto',inhaber:'Gemeinsam'};
-form(a._id?'Konto bearbeiten':'Neues Konto',[['name','Bezeichnung'],['bank','Bank / Anbieter'],['typ','Typ','select',KTYP],['inhaber','Inhaber','select',[...(S.set.personen||[]),'Gemeinsam']],['iban','IBAN / Nummer'],['kontakt','Ansprechperson / Telefon'],['s','Saldo 31.12.'+Y,'number'],['z','Zins / Ertrag '+Y,'number'],...(a.typ==='Pensionskasse'?[['wef','WEF-Vorbezug CHF','number'],['wefDatum','WEF-Vorbezug Datum','date'],['wefRueck','davon zurückbezahlt CHF','number'],['einkauf','Einkaufspotenzial laut Vorsorgeausweis','number']]:[]),['belege','Dokumente (Ausweise, Auszüge)','files'],['notiz','Notiz','area']],{...a,s:saldo(a,Y),z:a.zinsen?.[Y]},
+form(a._id?'Konto bearbeiten':'Neues Konto',[['name','Bezeichnung'],['bank','Bank / Anbieter'],['typ','Typ','select',KTYP],['inhaber','Inhaber','select',[...(S.set.personen||[]),'Gemeinsam']],['iban','IBAN / Nummer'],['kontakt','Ansprechperson / Telefon'],['zahltFuer','Zahlungen ab diesem Konto gelten als von (leer = Inhaber)','select',['',...(S.set.personen||[]),'Gemeinsam']],['s','Saldo 31.12.'+Y,'number'],['z','Zins / Ertrag '+Y,'number'],...(a.typ==='Pensionskasse'?[['wef','WEF-Vorbezug CHF','number'],['wefDatum','WEF-Vorbezug Datum','date'],['wefRueck','davon zurückbezahlt CHF','number'],['einkauf','Einkaufspotenzial laut Vorsorgeausweis','number']]:[]),['belege','Dokumente (Ausweise, Auszüge)','files'],['notiz','Notiz','area']],{...a,s:saldo(a,Y),z:a.zinsen?.[Y]},
 o=>{const n={...a,...o};n.saldi={...(a.saldi||{})};n.zinsen={...(a.zinsen||{})};if(o.s==null)delete n.saldi[Y];else n.saldi[Y]=o.s;if(o.z==null)delete n.zinsen[Y];else n.zinsen[Y]=o.z;delete n.s;delete n.z;return put('accounts',a._id,n)},a._id&&(()=>delDoc('accounts',a._id)))}
 function insForm(v){v=v||{typ:'Gebäude',person:'Gemeinsam',intervall:'jährlich'};
 form(v._id?'Versicherung bearbeiten':'Neue Versicherung',[['name','Bezeichnung'],['gesellschaft','Gesellschaft'],['typ','Typ','select',VTYP],['person','Person','select',[...(S.set.personen||[]),'Gemeinsam']],['police','Police-Nr.'],['praemie','Prämie CHF','number'],['intervall','Intervall','select',['jährlich','quartalsweise','monatlich']],['faellig','Fällig / Ablauf'],['kontakt','Ansprechperson / Telefon'],['belege','Police / Dokumente','files'],['notiz','Notiz','area']],v,
@@ -401,7 +424,7 @@ m.querySelectorAll('[data-delfr]').forEach(b=>b.onclick=()=>{const k=b.dataset.d
 const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
 on('#newtx',()=>txForm());on('#newacc',()=>accForm());on('#newins',()=>insForm());on('#edhaus',hausForm);on('#newfr',frForm);
 on('#copytax',async()=>{try{await navigator.clipboard.writeText(taxText());msg('In die Zwischenablage kopiert')}catch(e){msg('Kopieren nicht möglich')}});
-on('#csv',exportCsv);bindErfassen();if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
+on('#csv',exportCsv);bindErfassen();on('#newfin',()=>finForm());on('#finprint',()=>window.print());m.querySelectorAll('[data-fin]').forEach(r=>r.onclick=()=>finForm(+r.dataset.fin));if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
 m.querySelectorAll('[data-proj]').forEach(r=>r.onclick=()=>projForm(S.proj.find(x=>x._id===r.dataset.proj)));
 m.querySelectorAll('[data-bud]').forEach(r=>r.onclick=()=>budForm(S.bud.find(x=>x._id===r.dataset.bud)));
 m.querySelectorAll('[data-ics]').forEach(b=>b.onclick=()=>ics((S.haus.fristen||[]).filter(f=>f.datum+'|'+f.text===b.dataset.ics)));
@@ -520,6 +543,26 @@ const belege=CAPFILE?[await addBeleg(new File([CAPFILE],`${datum}_${$('#captext'
 await put('tx',null,{datum,text:$('#captext').value.trim(),betrag:+$('#capbetrag').value,bereich:ber,kategorie:$('#capkat').value,status:'Bezahlt',steuerjahr:+datum.slice(0,4),firma:$('#capfirma').value.trim(),konto:'',projekt:$('#capproj').value,beleg:'',belege,notiz:''});
 CAPFILE=null;msg('Gespeichert');render();window.scrollTo(0,0)}}
 
+
+/* ===== Wer zahlt was ===== */
+const payer=t=>{if(t.bezahltVon)return t.bezahltVon;const a=S.acc.find(x=>x._id===t.konto);return a?(a.zahltFuer||a.inhaber||'Unbekannt'):'Unbekannt'};
+const FARTEN=['Eigengut (z. B. Erbe, Schenkung)','Erspartes','Vorsorge (3a / Pensionskasse)','Hypothek / Kredit','Sonstiges'];
+function vAnteile(){const P=[...(S.set.personen||[]),'Gemeinsam','Unbekannt'],pers=S.set.personen||[];
+const T=txY(Y).filter(t=>t.status==='Bezahlt'&&!t.kapital&&!['Einkommen','Familienzulagen'].includes(t.kategorie)&&!(t.kategorie==='Anlagekosten'&&t.betrag>=100000));
+const grp=t=>t.bereich==='Haus'?'Haus':t.bereich==='Haushalt'||t.bereich==='Gemeinsam'?'Haushalt':'Persönlich';
+const cell=(p,g)=>sum(T.filter(t=>payer(t)===p&&(!g||grp(t)===g)),t=>t.betrag);
+const rows=P.filter(p=>cell(p)>0||pers.includes(p)),unk=T.filter(t=>payer(t)==='Unbekannt');
+const F=S.haus.finanzierung||[],fp=[...pers,'Gemeinsam'],fs=p=>sum(F.filter(f=>f.person===p),f=>f.betrag);
+return `<h2>Wer zahlt was ${Y}</h2><p class="mut">Bezahlte Ausgaben nach zahlender Person. Ohne Einkommen, Vorsorgebezüge und den Kaufpreis. «Gemeinsam» = Zahlungen ab gemeinsamen Konten wie dem Zak-Konto (je hälftig gefüllt).</p>
+<table class="stack"><thead><tr><th>Bezahlt von</th><th class="n">Haus</th><th class="n">Haushalt</th><th class="n">Persönlich</th><th class="n">Total</th></tr></thead><tbody>${rows.map(p=>`<tr><td>${esc(p)}</td><td class="n">${chf(cell(p,'Haus'))}</td><td class="n">${chf(cell(p,'Haushalt'))}</td><td class="n">${chf(cell(p,'Persönlich'))}</td><td class="n"><b>${chf(cell(p))}</b></td></tr>`).join('')}</tbody></table>
+${unk.length?`<p class="mut">${unk.length} Buchungen ohne Konto oder «Bezahlt von» (CHF ${chf(sum(unk,t=>t.betrag))}). Antippen und «Bezahlt von» setzen, wenn es wichtig ist:</p><table class="stack"><tbody>${unk.sort((a,b)=>b.betrag-a.betrag).slice(0,8).map(t=>`<tr class="click" data-tx="${esc(t._id)}"><td>${dt(t.datum)}</td><td>${esc(t.text)}</td><td class="n">${chf(t.betrag)}</td></tr>`).join('')}</tbody></table>`:''}
+<div class="row" style="justify-content:space-between;margin-top:28px"><h3 style="margin:0">Herkunft der Mittel für das Haus</h3><div class="row noprint"><button class="ghost" id="finprint">Drucken / PDF</button><button id="newfin">Eintrag</button></div></div>
+<p class="mut">Dokumentiert, wer mit welchem Geld zum Hauskauf und zu grossen Investitionen beigetragen hat – wichtig für Güter- und Erbrecht (keine Rechtsberatung).</p>
+${F.length?`<table class="stack"><thead><tr><th>Datum</th><th>Person</th><th>Herkunft</th><th>Art</th><th class="n">CHF</th></tr></thead><tbody>${F.map((f,i)=>`<tr class="click" data-fin="${i}"><td>${dt(f.datum)}</td><td>${esc(f.person)}</td><td>${esc(f.text)}<div class="mut">${esc(f.notiz||'')}</div></td><td>${esc(f.art)}</td><td class="n">${chf(f.betrag)}</td></tr>`).join('')}
+${fp.map(p=>`<tr class="sum"><td></td><td>${esc(p)}</td><td>Total</td><td></td><td class="n">${chf(fs(p))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Noch nichts erfasst.</div>'}`}
+function finForm(i){const F=[...(S.haus.finanzierung||[])],f=i!=null?F[i]:{art:'Erspartes',person:'Gemeinsam'};
+form(i!=null?'Eintrag bearbeiten':'Herkunft der Mittel',[['datum','Datum','date'],['person','Person','select',[...(S.set.personen||[]),'Gemeinsam']],['text','Herkunft (z. B. Erbvorbezug Vater)'],['art','Art','select',FARTEN],['betrag','Betrag CHF','number'],['notiz','Notiz / Beleg','area']],f,
+o=>{if(i!=null)F[i]={...f,...o};else F.push(o);F.sort((a,b)=>(a.datum||'')<(b.datum||'')?-1:1);return setDoc('haus',{...S.haus,finanzierung:F})},i!=null&&(()=>{F.splice(i,1);return setDoc('haus',{...S.haus,finanzierung:F})}))}
 /* ===== Einstellungen ===== */
 function vEinst(){const P=S.set.personen||[],K=S.set.kinder||[];
 return `<h2>Einstellungen</h2>
@@ -529,6 +572,7 @@ ${CFG.clientId?'':`<label>Google Client-ID<input id="cid" placeholder="…apps.g
 <div class="row">${CFG.file?`<button id="syncnow">Jetzt synchronisieren</button><button class="ghost" id="drvopen">Ordner in Drive öffnen</button><button class="ghost" id="drvoff">Verbindung trennen</button>`:`<button id="drvnew">Neuen Ordner anlegen (erste Person)</button><button class="ghost" id="drvjoin">Geteilten Ordner verbinden (zweite Person)</button>`}</div>
 <p class="mut">Ablauf: Lukas legt den Ordner an und teilt «Familienfinanzen Gerber» in Google Drive mit Annika (Bearbeiter). Annika tippt dann «Geteilten Ordner verbinden». Jeden Tag wird automatisch eine Kopie in «Backups» gespeichert.</p></div>
 <h3>Personen</h3><div class="card"><label>Erwachsene (kommagetrennt)<input id="pers" value="${esc(P.join(', '))}"></label>
+<label style="margin-top:10px">Heiratsdatum (bis zu diesem Jahr getrennte Steuererklärungen)<input id="heirat" type="date" value="${esc(S.set.heirat||'')}"></label>
 <div class="lbl" style="margin-top:10px">Kinder</div>${K.length?`<table>${K.map((k,i)=>`<tr><td>${esc(k.name)}</td><td>${k.geburt?dt(k.geburt):'<span class="mut">Geburt offen</span>'}</td><td><button class="link" data-kidx="${i}">bearbeiten</button></td></tr>`).join('')}</table>`:'<p class="mut">Noch keine Kinder erfasst.</p>'}
 <div class="row" style="margin-top:8px"><button class="ghost" id="newkid">Kind hinzufügen</button><button id="perssave">Personen speichern</button></div></div>
 <h3>Daten</h3><div class="card row"><button class="ghost" id="bak">Backup herunterladen</button><button class="ghost" id="rest">Backup / Daten importieren</button></div>
@@ -541,7 +585,7 @@ on('#drvnew',run(driveSetupNew));on('#drvjoin',run(driveConnectExisting));on('#s
 on('#drvopen',()=>window.open('https://drive.google.com/drive/folders/'+CFG.folder,'_blank'));
 on('#drvoff',()=>{['folder','file','belege','backups'].forEach(k=>setCfg(k,''));localStorage.removeItem('ff_signed');TOKEN=null;render()});
 on('#newkid',()=>kidForm());$('#main').querySelectorAll('[data-kidx]').forEach(b=>b.onclick=()=>kidForm(+b.dataset.kidx));
-on('#perssave',()=>setDoc('settings',{...S.set,personen:$('#pers').value.split(',').map(s=>s.trim()).filter(Boolean)}).then(()=>msg('Gespeichert')))}
+on('#perssave',()=>setDoc('settings',{...S.set,personen:$('#pers').value.split(',').map(s=>s.trim()).filter(Boolean),heirat:$('#heirat').value}).then(()=>msg('Gespeichert')))}
 
 /* ===== Start ===== */
 (async()=>{const st=$('#status');
