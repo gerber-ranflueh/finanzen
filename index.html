@@ -132,7 +132,7 @@ $('#bnav').innerHTML=B.map(([k,i,l])=>`<a href="#${k}" class="${k===view?'on':''
 $('#morein').innerHTML=VIEWS.filter(v=>!B.some(b=>b[0]===v[0])).map(([k,l])=>`<a href="#${k}" class="${k===view?'on':''}">${l}</a>`).join('');
 $('#morebtn').onclick=e=>{e.preventDefault();$('#more').classList.add('on')};$('#more').onclick=()=>$('#more').classList.remove('on');}
 function years(){const ys=new Set([new Date().getFullYear(),Y]);S.tx.forEach(t=>t.steuerjahr&&ys.add(+t.steuerjahr));S.acc.forEach(a=>Object.keys(a.saldi||{}).forEach(k=>ys.add(+k)));
-$('#year').innerHTML=[...ys].sort((a,b)=>b-a).map(y=>`<option ${y===Y?'selected':''}>${y}</option>`).join('');}
+const lo=Math.min(...ys),hi=Math.max(...ys,new Date().getFullYear()+1);for(let y=lo;y<=hi;y++)ys.add(y);$('#year').innerHTML=[...ys].sort((a,b)=>b-a).map(y=>`<option ${y===Y?'selected':''}>${y}</option>`).join('');}
 
 function render(){nav();years();const m=$('#main');if(!S.ok){return}
 m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,einstellungen:vEinst}[view]||vUeb)();bind();setSync();}
