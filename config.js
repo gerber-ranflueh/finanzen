@@ -1,3 +1,1 @@
-// Hier die Google OAuth Client-ID eintragen (siehe ANLEITUNG.md, Schritt 2).
-// Leer lassen = die App fragt in den Einstellungen danach.
-window.FF_CONFIG={googleClientId:''};
+window.FF_CONFIG={googleClientId:'947760678116-a5m2c09kggnk1dbq87nvmtfbp2tmpjv3.apps.googleusercontent.com'};
