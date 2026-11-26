@@ -154,7 +154,8 @@ const haus=T.filter(x=>x.bereich==='Haus'&&x.kategorie!=='Anlagekosten');const b
 const ent=Object.entries(by).sort((a,b)=>b[1]-a[1]),mx=Math.max(1,...ent.map(e=>e[1]));
 const pr=S.tx.filter(x=>x.status==='Zu prüfen').sort((a,b)=>(b.betrag||0)-(a.betrag||0));
 const fr=(S.haus.fristen||[]).filter(f=>f.datum>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.datum<b.datum?-1:1).slice(0,4);
-return `<h2>Finanzen ${Y} auf einen Blick</h2><p class="mut">Stand der erfassten Saldi per 31.12.${Y}. Hypothek als Schuld abgezogen; 3a und Pensionskasse nicht enthalten.</p>
+const today=new Date().toISOString().slice(0,10),lim=new Date(Date.now()+60*864e5).toISOString().slice(0,10),due=(S.haus.fristen||[]).filter(f=>f.datum<=lim&&f.datum>=today).sort((a,b)=>a.datum<b.datum?-1:1);
+return `${due.length?`<div class="note" style="background:#fff3c4;color:#4a3b00;margin-bottom:16px"><b>Bald fällig:</b> ${due.map(f=>`${dt(f.datum)} – ${esc(f.text)}`).join('<br>')}</div>`:''}<h2>Finanzen ${Y} auf einen Blick</h2><p class="mut">Stand der erfassten Saldi per 31.12.${Y}. Hypothek als Schuld abgezogen; 3a und Pensionskasse nicht enthalten.</p>
 <div class="hero"><div class="slab"><div><div style="font-weight:700">Nettovermögen 31.12.${Y}</div><div class="mut" style="color:#3b3300">Guthaben ${chf0(t.verm)} − Hypothek ${chf0(t.schuld)}</div></div><div class="big">CHF ${chf0(netto)}</div></div>
 <div class="kpis"><div class="kpi"><span class="mut">Hypothek</span><b>${chf0(t.schuld)}</b></div><div class="kpi"><span class="mut">Schuldzinsen ${Y}</span><b>${chf(t.zins)}</b></div>
 <div class="kpi"><span class="mut">Liegenschaftskosten abziehbar</span><b>${chf(t.uhB)}</b></div><div class="kpi"><span class="mut">Zu prüfen (alle Jahre)</span><b>${pr.length}</b></div></div></div>
@@ -165,10 +166,10 @@ ${verlauf()}<h3>Nächste Fristen</h3>${fr.length?`<table class="stack"><thead><t
 <div class="row"><button id="bak">Backup herunterladen</button><button class="ghost" id="rest">Backup wiederherstellen</button></div>`}
 
 let F={b:'',k:'',s:'',q:''};
-function vBuch(){let T=txY(Y).filter(t=>(!F.b||t.bereich===F.b)&&(!F.k||t.kategorie===F.k)&&(!F.s||t.status===F.s)&&(!F.q||(t.text+' '+(t.firma||'')+' '+(t.notiz||'')).toLowerCase().includes(F.q.toLowerCase())));
+function vBuch(){const ALL=!!F.q;let T=(ALL?S.tx:txY(Y)).filter(t=>(!F.b||t.bereich===F.b)&&(!F.k||t.kategorie===F.k)&&(!F.s||t.status===F.s)&&(!F.q||(t.text+' '+(t.firma||'')+' '+(t.notiz||'')).toLowerCase().includes(F.q.toLowerCase())));
 T.sort((a,b)=>(a.datum||'9')<(b.datum||'9')?-1:1);
 const o=(arr,v)=>`<option value="">Alle</option>`+arr.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
-return `<div class="row" style="justify-content:space-between"><h2>Buchungen ${Y}</h2><div class="row"><button class="ghost" id="imp">CSV importieren</button><button class="ghost" id="csv">CSV exportieren</button><button id="newtx">Neue Buchung</button></div></div>
+return `<div class="row" style="justify-content:space-between"><h2>Buchungen ${ALL?'– Suche alle Jahre':Y}</h2><div class="row"><button class="ghost" id="imp">CSV importieren</button><button class="ghost" id="csv">CSV exportieren</button><button id="newtx">Neue Buchung</button></div></div>
 <div class="filters"><label>Bereich<select id="fb">${o(bereiche(),F.b)}</select></label><label>Kategorie<select id="fk">${o(KAT,F.k)}</select></label><label>Status<select id="fs">${o(STATUS,F.s)}</select></label><label>Suche<input id="fq" value="${esc(F.q)}" placeholder="Text, Firma, Notiz"></label></div>
 <p class="mut">${T.length} Buchungen · Total CHF ${chf(sum(T,t=>t.betrag))}</p>
 ${T.length?`<table class="stack"><thead><tr><th>Datum</th><th>Beschreibung</th><th>Bereich</th><th>Kategorie</th><th>Status</th><th class="n">CHF</th></tr></thead><tbody>${T.map(t=>`<tr class="click" data-tx="${esc(t._id)}"><td>${dt(t.datum)}</td><td>${esc(t.text)}<div class="mut">${esc([t.firma,t.konto&&accName(t.konto)].filter(Boolean).join(' · '))}</div></td><td>${esc(t.bereich)}</td><td>${esc(t.kategorie)}</td><td>${tag(t.status)}${t.belege?.length?' <span class="tag">Beleg</span>':''}</td><td class="n">${chf(t.betrag)}${t.abziehbar!=null&&t.abziehbar!==t.betrag?`<div class="mut">abz. ${chf(t.abziehbar)}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Keine Buchungen für diese Auswahl.</div>'}`}
@@ -191,7 +192,7 @@ function checks(y){const t=tax(y),c=[];
 t.T.filter(x=>x.status==='Zu prüfen').forEach(x=>c.push(['Buchung zu prüfen',x.text+(x.firma?' · '+x.firma:''),x.betrag,x._id]));
 t.T.filter(x=>x.status==='Offen').forEach(x=>c.push(['Zahlung offen',x.text,x.betrag,x._id]));
 t.T.filter(x=>x.bereich==='Haus'&&x.status==='Bezahlt'&&['Unterhalt','Versicherung','Grundgebühren','Liegenschaftssteuer'].includes(x.kategorie)&&abz(x)>0&&!x.beleg&&!x.belege?.length).forEach(x=>c.push(['Beleg fehlt',x.text,abz(x),x._id]));
-S.acc.filter(a=>!['Pensionskasse'].includes(a.typ)&&saldo(a,y)==null).forEach(a=>c.push(['Saldo 31.12. fehlt',a.name+' ('+(a.bank||'')+')',null,null,a._id]));
+S.acc.filter(a=>!['Pensionskasse','Säule 3a'].includes(a.typ)&&saldo(a,y)==null).forEach(a=>c.push(['Saldo 31.12. fehlt',a.name+' ('+(a.bank||'')+')',null,null,a._id]));
 if(!t.emw)c.push(['Eigenmietwert Kanton fehlt','unter Haus erfassen',null]);if(!t.emwB)c.push(['Eigenmietwert Bund fehlt','unter Haus erfassen',null]);
 return c}
 function vSteuern(){const t=tax(Y),best=Math.max(t.uhB,t.pausch),eff=t.uhB>=t.pausch,bestB=Math.max(t.uhB,t.pauschB),C=checks(Y);
@@ -437,7 +438,10 @@ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=
 
 /* ===== Belege ===== */
 const LOCALURL={};
-async function addBeleg(file){const key='local:'+uid();await kv('files',key,{blob:file,name:file.name,type:file.type});LOCALURL[key]=URL.createObjectURL(file);setTimeout(()=>sync(false),500);return{id:key,name:file.name}}
+async function shrink(file){if(!file.type.startsWith('image/')||file.size<600000)return file;
+try{const bmp=await createImageBitmap(file);const k=Math.min(1,2000/Math.max(bmp.width,bmp.height));const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+const b=await new Promise(res=>c.toBlob(res,'image/jpeg',0.8));if(!b||b.size>=file.size)return file;return new File([b],file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'})}catch(_){return file}}
+async function addBeleg(file){file=await shrink(file);const key='local:'+uid();await kv('files',key,{blob:file,name:file.name,type:file.type});LOCALURL[key]=URL.createObjectURL(file);setTimeout(()=>sync(false),500);return{id:key,name:file.name}}
 const belegUrl=b=>b.link||LOCALURL[b.id]||'#';
 
 /* ===== Google Drive ===== */
