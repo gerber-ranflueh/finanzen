@@ -504,17 +504,26 @@ for(const k of['haus','settings'])out[k]=((a[k]?.updatedAt||0)>=(b[k]?.updatedAt
 let syncing=false;
 async function uploadPending(){const keys=(await kvKeys('files')).filter(k=>String(k).startsWith('local:'));let n=0;
 for(const key of keys){const f=await kv('files',key);if(!f)continue;const nm=(f.name||'beleg').replace(/[\\/:*?"<>|]+/g,'_');
-const yearF=await dFolder(String(new Date().getFullYear()),CFG.belege);const r=await dUpload({name:nm,parents:[yearF]},f.blob);
+const yearF=await dFolder(String(new Date().getFullYear()),CFG.belege);const r=await dUpload({name:nm,parents:[yearF]},f.blob);await dLock(r.id,'Beleg – nicht ändern');
 for(const k of Object.values(COLS))for(const rec of S[k])if(rec.belege?.some(b=>b.id===key)){rec.belege=rec.belege.map(b=>b.id===key?{id:r.id,name:b.name,link:r.webViewLink}:b);rec.updatedAt=Date.now()}
 await kv('files',key,null);n++}
 if(n){await kv('kv','data',snapshot());await kv('kv','dirty',true)}return n}
+async function dLock(id,reason){try{await gapi(`/files/${id}?supportsAllDrives=true`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentRestrictions:[{readOnly:true,reason}]})})}catch(_){}}
+async function processImports(data){let imp=localStorage.getItem('ff_import');if(!imp){imp=await dFolder('Import',CFG.folder);localStorage.setItem('ff_import',imp)}
+const L=(await dFind(`'${imp}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`)).filter(f=>/\.json$/i.test(f.name));if(!L.length)return[data,0];
+const done=await dFolder('erledigt',imp);let n=0;
+for(const f of L){try{const j=await (await gapi(`/files/${f.id}?alt=media&supportsAllDrives=true`)).json();if(j.app!=='Familienfinanzen Gerber'&&!j.v)continue;
+for(const c of Object.keys(COLS))j[c]=j[c]||[];j.tomb=j.tomb||{};data=mergeData(data,j);n++;
+await gapi(`/files/${f.id}?addParents=${done}&removeParents=${imp}&supportsAllDrives=true`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:'{}'})}catch(e){console.warn('Import',f.name,e)}}
+return[data,n]}
 async function dailyBackup(data){const d=new Date().toISOString().slice(0,10);if(localStorage.getItem('ff_lastbak')===d||!CFG.backups)return;
-const ex=await dFind(`name='daten_${d}.json' and '${CFG.backups}' in parents and trashed=false`);if(!ex.length)await dUpload({name:`daten_${d}.json`,parents:[CFG.backups]},new Blob([JSON.stringify(data)],{type:'application/json'}));localStorage.setItem('ff_lastbak',d)}
+const ex=await dFind(`name='daten_${d}.json' and '${CFG.backups}' in parents and trashed=false`);if(!ex.length){const b=await dUpload({name:`daten_${d}.json`,parents:[CFG.backups]},new Blob([JSON.stringify(data)],{type:'application/json'}));await dLock(b.id,'Automatisches Backup – nicht ändern')}localStorage.setItem('ff_lastbak',d)}
 async function sync(interactive){if(syncing||!CFG.file)return;if(!navigator.onLine){SYNC.state='offline';setSync();return}syncing=true;SYNC.state='sync';setSync();
 try{await uploadPending();const meta=await (await gapi(`/files/${CFG.file}?fields=version,modifiedTime&supportsAllDrives=true`,{},interactive)).json();
 const lastV=await kv('kv','remoteVersion'),dirty=await kv('kv','dirty');let data=snapshot();
 if(meta.version!==lastV){const remote=await (await gapi(`/files/${CFG.file}?alt=media&supportsAllDrives=true`)).json();data=mergeData(data,remote);loadSnap(data);await kv('kv','data',data)}
-if(dirty||meta.version!==lastV){const r=await dUpload({},new Blob([JSON.stringify(data)],{type:'application/json'}),CFG.file);await kv('kv','remoteVersion',r.version);await kv('kv','dirty',false)}
+let nImp=0;try{[data,nImp]=await processImports(data)}catch(e){console.warn(e)}if(nImp){loadSnap(data);await kv('kv','data',data);await kv('kv','dirty',true);msg(nImp+' Import(e) aus Drive übernommen')}
+if(dirty||nImp||meta.version!==lastV){const r=await dUpload({},new Blob([JSON.stringify(data)],{type:'application/json'}),CFG.file);await kv('kv','remoteVersion',r.version);await kv('kv','dirty',false)}
 await dailyBackup(data);SYNC={state:'ok',last:new Date(),err:''};render()}
 catch(e){SYNC=e.message==='LOGIN'?{state:'login',last:SYNC.last,err:''}:{state:'fehler',last:SYNC.last,err:e.message||String(e)}}finally{syncing=false;setSync()}}
 function setSync(){const el=$('#sync');if(!el)return;const s=SYNC.state;el.className='sync '+s;
