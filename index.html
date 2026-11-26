@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Familienfinanzen Gerber</title>
+<meta name="theme-color" content="#101418">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ruhig, präzise, wie ein gut geführtes Kassabuch einer Treuhänderin.
+   IDEA: das Jahresdossier – pro Steuerjahr eine Mappe mit Konten, Belegen, Haus.
+   PICTURE: die Kennzahl Nettovermögen auf gelbem Feld, darunter Kostenbalken nach Kategorie.
+   COLOUR and TYPE: Weiss, Tinte #101418, Gelb #ffd84a nur hinter der Kennzahl, Schiefer; Manrope.
+   LAYOUT: Kennzahl zuerst, Tabellen folgen; Navigation als wrapping Reiter, Jahr rechts. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#101418);--ink:light-dark(#101418,#e9ecef);--mut:light-dark(#5b6672,#9aa5b1);--line:light-dark(#e3e6ea,#262d35);--soft:light-dark(#f4f6f8,#171d23);--y:#ffd84a;--yi:#101418;--neg:light-dark(#b42318,#ff8a7a);--pos:light-dark(#0f6b3a,#6fd39b);--acc:light-dark(#2f4a63,#8fb3d4)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Manrope,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,3vw,40px) max(5vw,16px);max-width:1240px;margin:0 auto}
+header{border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.hd{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;max-width:1240px;margin:0 auto;padding:12px max(5vw,16px)}
+.hd h1{font-size:18px;margin:0;font-weight:800;margin-inline-end:auto}
+nav{display:flex;flex-wrap:wrap;gap:4px}
+nav a{padding:9px 12px;border-radius:8px;color:var(--mut);text-decoration:none;font-weight:600;font-size:14px;min-height:40px;display:inline-flex;align-items:center}
+nav a.on{background:var(--ink);color:var(--bg)}
+select,input,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:44px;width:100%}
+button{font:inherit;font-weight:700;font-size:15px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:8px;padding:10px 16px;min-height:44px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button.link{background:none;border:0;color:var(--acc);padding:6px 4px;min-height:auto;font-weight:600}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+h2{font-size:clamp(26px,3.4vw,36px);line-height:1.05;margin:0 0 6px;text-wrap:balance}
+h3{font-size:19px;margin:28px 0 10px}
+.mut{color:var(--mut);font-size:14px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:stretch}
+.slab{background:var(--y);color:var(--yi);border-radius:14px;padding:24px 26px;display:flex;flex-direction:column;justify-content:space-between;min-height:220px}
+.slab .big{font-size:clamp(40px,6vw,64px);font-weight:800;line-height:1;letter-spacing:-.02em;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi b{display:block;font-size:24px;white-space:nowrap}
+.bars{display:grid;gap:8px;margin-top:8px}
+.bar{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
+.bar i{display:block;height:14px;border-radius:4px;background:var(--acc)}
+.bar span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:13px;color:var(--mut);font-weight:600;border-bottom:1px solid var(--line);padding:8px 6px}
+td{border-bottom:1px solid var(--line);padding:9px 6px;vertical-align:top}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.click{cursor:pointer}tr.click:hover{background:var(--soft)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);white-space:nowrap}
+.tag.p{background:#ffe9a8;color:#5a4300}.tag.b{background:#d7f0e0;color:#0f4d2c}.tag.o{background:#fde0dc;color:#7a1d12}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.sum td{font-weight:800;border-top:2px solid var(--ink)}
+dialog{border:0;border-radius:14px;padding:0;width:min(560px,94vw);background:var(--bg);color:var(--ink);box-shadow:0 20px 60px #0006}
+dialog::backdrop{background:#0008}
+dialog form{padding:20px;display:grid;gap:12px;max-height:85vh;overflow:auto}
+label{display:grid;gap:4px;font-size:14px;font-weight:600}
+.note{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:14px}
+.empty{padding:30px;text-align:center;color:var(--mut);border:1px dashed var(--line);border-radius:12px}
+#msg{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+#msg.on{opacity:1}
+@media(prefers-reduced-motion:reduce){#msg{transition:none}}
+pre,.scroll{overflow-x:auto}
+@media(max-width:700px){.hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut)}.stack td:empty{display:none}.bar{grid-template-columns:minmax(0,7em) minmax(0,1fr) auto}}
+
+.sync{font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap;color:var(--mut)}
+.sync.ok{color:var(--pos)}.sync.fehler{color:var(--neg);border-color:var(--neg)}.sync.login{color:var(--acc);border-color:var(--acc)}
+#bnav{display:none}
+.cap{display:grid;gap:12px;max-width:560px}.shot{display:flex;align-items:center;justify-content:center;min-height:110px;border:2px dashed var(--line);border-radius:14px;font-weight:700;font-size:17px;cursor:pointer;background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.chip{background:var(--bg);color:var(--ink);border:1px solid var(--line);font-weight:600;padding:8px 12px;min-height:40px}.chip.on{background:var(--ink);color:var(--bg)}
+.lbl{font-size:14px;font-weight:600}.big{min-height:54px;font-size:17px}.grid2c{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#more{position:fixed;inset:0;background:#0007;z-index:20;display:none}#more.on{display:block}#more div{position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:grid;gap:4px}
+#more a{padding:14px;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:700}#more a.on{background:var(--soft)}
+@media(max-width:760px){header nav{display:none}.hd h1{font-size:16px}
+#bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--line);z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+#bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;font-size:11px;font-weight:700;color:var(--mut);text-decoration:none;min-height:56px;justify-content:center}#bnav a.on{color:var(--ink);background:none}#bnav a.plus span:first-child{background:var(--y);color:var(--yi);border-radius:12px;width:44px;height:30px;display:flex;align-items:center;justify-content:center;font-size:22px}
+#bnav span:first-child{font-size:20px;line-height:1}main.band{padding-bottom:96px}}
+@media print{header,#bnav,.noprint,#msg{display:none!important}.band{padding:0}body{font-size:12px}}
+</style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head>
+<body>
+<header><div class="hd">
+<h1>Familienfinanzen Gerber</h1>
+<nav id="nav"></nav>
+<span id="sync" class="sync" role="button" tabindex="0">…</span>
+<select id="year" aria-label="Steuerjahr" style="width:auto"></select>
+</div></header>
+<main id="main" class="band"><p class="mut" id="status">Daten werden geladen …</p></main>
+<nav id="bnav" aria-label="Hauptnavigation"></nav><div id="more"><div id="morein"></div></div>
+<dialog id="dlg"><form id="frm" method="dialog"></form></dialog>
+<div id="msg" role="status"></div>
+<script>
+{
+const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['einstellungen','Einstellungen']];
+const MAX3A={2020:6826,2021:6883,2022:6883,2023:7056,2024:7056,2025:7258,2026:7258};
+const PSTAT=['Idee','Offerten einholen','Geplant','In Arbeit','Erledigt','Verworfen'];
+const PSTEU=['Unterhalt (abziehbar)','Wertvermehrend (Anlagekosten)','Gemischt','Zu klären','Nicht abziehbar'];
+const DEF_REGELN=`kaminfeger = Haus / Unterhalt\ngemeinde lützelflüh|gemeindeverwaltung lützelflüh = Haus / Grundgebühren\ngebäudeversicherung|gvb = Haus / Versicherung\nbauhaus|jumbo|hornbach|landi|obi|lerchholz = Haus / Unterhalt\njenni energietechnik = Haus / Unterhalt\nhypothekarzins|zinsabschluss hypothek = Haus / Hypothekarzins\namortisation = Haus / Amortisation\nviac|finpension|frankly = Lukas / Säule 3a\ncss|helsana|swica|sanitas|visana|concordia|kpt|assura|groupe mutuel|ökk|atupri = Haushalt / Krankenkasse\nsteuerverwaltung|steuerrechnung = Haushalt / Steuern\nlohn|salär|gehalt = Gemeinsam / Einkommen`;
+const KAT=['Anlagekosten','Wertvermehrend','Unterhalt','Hypothekarzins','Amortisation','Versicherung','Grundgebühren','Liegenschaftssteuer','Gebühren & Steuern','Säule 3a','Einkommen','Familienzulagen','Lebenshaltung','Krankenkasse','Krankheitskosten','Kinderbetreuung','Berufsauslagen','Spenden','Steuern','Sonstiges'];
+const STATUS=['Bezahlt','Offen','Geplant','Gestundet','Zu prüfen'];
+const KTYP=['Privatkonto','Sparkonto','Liegenschaftskonto','Depot','Anteilschein','Säule 3a','Pensionskasse','Hypothek'];
+const VTYP=['Gebäude','Hausrat/Haftpflicht','Rechtsschutz','Krankenkasse','Leben/Risiko','Auto','Sonstige'];
+const S={tx:[],acc:[],ins:[],proj:[],bud:[],tomb:{},haus:{},set:{personen:['Lukas','Annika']},ok:false};
+let view='uebersicht',dlgSave=null;
+let Y=new Date().getFullYear()-1;
+try{Y=+(localStorage.getItem('fy'))||Y}catch(e){}
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const chf=v=>(v==null||v===''||isNaN(v))?'–':Number(v).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const chf0=v=>Number(v||0).toLocaleString('de-CH',{maximumFractionDigits:0});
+const dt=d=>d?d.split('-').reverse().join('.'):'–';
+const sum=(a,f)=>a.reduce((s,x)=>s+(+f(x)||0),0);
+const msg=t=>{const m=$('#msg');m.textContent=t;m.classList.add('on');setTimeout(()=>m.classList.remove('on'),2200)};
+const bereiche=()=>['Haus','Haushalt',...(S.set.personen||[]),...(S.set.kinder||[]).map(k=>k.name).filter(Boolean),'Gemeinsam'];
+const tag=s=>`<span class="tag ${s==='Bezahlt'?'b':s==='Zu prüfen'?'p':s==='Offen'?'o':''}">${esc(s)}</span>`;
+const abz=t=>t.abziehbar??t.betrag;
+const txY=y=>S.tx.filter(t=>+t.steuerjahr===y);
+const saldo=(a,y)=>a.saldi?.[y];
+
+function nav(){$('#nav').innerHTML=VIEWS.filter(v=>v[0]!=='erfassen').map(([k,l])=>`<a href="#${k}" class="${k===view?'on':''}">${l}</a>`).join('')+`<a href="#erfassen" class="${view==='erfassen'?'on':''}">+ Beleg</a>`;
+const B=[['uebersicht','⌂','Übersicht'],['buchungen','≡','Buchungen'],['erfassen','+','Beleg'],['steuern','§','Steuern']];const main=B.some(b=>b[0]===view);
+$('#bnav').innerHTML=B.map(([k,i,l])=>`<a href="#${k}" class="${k===view?'on':''} ${k==='erfassen'?'plus':''}"><span>${i}</span><span>${l}</span></a>`).join('')+`<a href="#" id="morebtn" class="${main?'':'on'}"><span>⋯</span><span>Mehr</span></a>`;
+$('#morein').innerHTML=VIEWS.filter(v=>!B.some(b=>b[0]===v[0])).map(([k,l])=>`<a href="#${k}" class="${k===view?'on':''}">${l}</a>`).join('');
+$('#morebtn').onclick=e=>{e.preventDefault();$('#more').classList.add('on')};$('#more').onclick=()=>$('#more').classList.remove('on');}
+function years(){const ys=new Set([new Date().getFullYear(),Y]);S.tx.forEach(t=>t.steuerjahr&&ys.add(+t.steuerjahr));S.acc.forEach(a=>Object.keys(a.saldi||{}).forEach(k=>ys.add(+k)));
+$('#year').innerHTML=[...ys].sort((a,b)=>b-a).map(y=>`<option ${y===Y?'selected':''}>${y}</option>`).join('');}
+
+function render(){nav();years();const m=$('#main');if(!S.ok){return}
+m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,einstellungen:vEinst}[view]||vUeb)();bind();setSync();}
+
+function tax(y){const T=txY(y);
+const guth=S.acc.filter(a=>!['Hypothek','Säule 3a','Pensionskasse'].includes(a.typ)&&saldo(a,y)!=null);
+const hyp=S.acc.filter(a=>a.typ==='Hypothek');
+const zinsTx=sum(T.filter(t=>t.kategorie==='Hypothekarzins'&&t.status==='Bezahlt'),t=>t.betrag);
+const zinsAcc=sum(hyp,a=>a.zinsen?.[y]);
+const H=T.filter(t=>t.bereich==='Haus'),HB=H.filter(t=>t.status==='Bezahlt'),k=c=>sum(HB.filter(t=>t.kategorie===c),abz);
+const uh=k('Unterhalt'),vers=k('Versicherung'),gg=k('Grundgebühren'),lst=k('Liegenschaftssteuer'),uhB=uh+vers+gg;
+const uhP=sum(H.filter(t=>t.status==='Zu prüfen'&&['Unterhalt','Versicherung','Grundgebühren'].includes(t.kategorie)),abz);
+const emw=+(S.haus.emwJahre?.[y]??S.haus.eigenmietwert)||0,emwB=+(S.haus.emwBundJahre?.[y]??S.haus.eigenmietwertBund)||0,pPct=S.haus.ueber10?0.2:0.1;
+const s3a=T.filter(t=>t.kategorie==='Säule 3a');
+return{T,guth,hyp,verm:sum(guth,a=>saldo(a,y)),ertrag:sum(guth,a=>a.zinsen?.[y]),schuld:sum(hyp,a=>saldo(a,y)),zins:zinsAcc||zinsTx,uh,vers,gg,lst,uhB,uhP,emw,emwB,pausch:emw*pPct,pauschB:emwB*pPct,pPct,s3a}}
+
+function vUeb(){const t=tax(Y),netto=t.verm-t.schuld,T=t.T;
+const haus=T.filter(x=>x.bereich==='Haus'&&x.kategorie!=='Anlagekosten');const by={};haus.forEach(x=>by[x.kategorie]=(by[x.kategorie]||0)+(+x.betrag||0));
+const ent=Object.entries(by).sort((a,b)=>b[1]-a[1]),mx=Math.max(1,...ent.map(e=>e[1]));
+const pr=S.tx.filter(x=>x.status==='Zu prüfen').sort((a,b)=>(b.betrag||0)-(a.betrag||0));
+const fr=(S.haus.fristen||[]).filter(f=>f.datum>=new Date().toISOString().slice(0,10)).sort((a,b)=>a.datum<b.datum?-1:1).slice(0,4);
+return `<h2>Finanzen ${Y} auf einen Blick</h2><p class="mut">Stand der erfassten Saldi per 31.12.${Y}. Hypothek als Schuld abgezogen; 3a und Pensionskasse nicht enthalten.</p>
+<div class="hero"><div class="slab"><div><div style="font-weight:700">Nettovermögen 31.12.${Y}</div><div class="mut" style="color:#3b3300">Guthaben ${chf0(t.verm)} − Hypothek ${chf0(t.schuld)}</div></div><div class="big">CHF ${chf0(netto)}</div></div>
+<div class="kpis"><div class="kpi"><span class="mut">Hypothek</span><b>${chf0(t.schuld)}</b></div><div class="kpi"><span class="mut">Schuldzinsen ${Y}</span><b>${chf(t.zins)}</b></div>
+<div class="kpi"><span class="mut">Liegenschaftskosten abziehbar</span><b>${chf(t.uhB)}</b></div><div class="kpi"><span class="mut">Zu prüfen (alle Jahre)</span><b>${pr.length}</b></div></div></div>
+<div class="grid2" style="margin-top:22px"><div><h3>Hauskosten ${Y} nach Kategorie</h3>${ent.length?`<div class="bars">${ent.map(([k,v])=>`<div class="bar"><span>${esc(k)}</span><span><i style="width:${v/mx*100}%"></i></span><span>${chf(v)}</span></div>`).join('')}</div>`:'<div class="empty">Keine Hauskosten erfasst.</div>'}
+${verlauf()}<h3>Nächste Fristen</h3>${fr.length?`<table class="stack"><thead><tr><th>Datum</th><th>Was</th></tr></thead><tbody>${fr.map(f=>`<tr><td>${dt(f.datum)}</td><td>${esc(f.text)}</td></tr>`).join('')}</tbody></table>`:'<p class="mut">Keine Fristen erfasst.</p>'}</div>
+<div><h3>Zu prüfen</h3>${pr.length?`<table class="stack"><thead><tr><th>Datum</th><th>Beschreibung</th><th class="n">CHF</th></tr></thead><tbody>${pr.slice(0,10).map(x=>`<tr class="click" data-tx="${esc(x._id)}"><td>${dt(x.datum)}</td><td>${esc(x.text)}<div class="mut">${esc(x.firma||'')}</div></td><td class="n">${chf(x.betrag)}</td></tr>`).join('')}</tbody></table>${pr.length>10?`<p class="mut">… und ${pr.length-10} weitere unter Buchungen.</p>`:''}`:'<div class="empty">Alles geprüft.</div>'}</div></div>
+<h3>Datensicherung</h3><p class="mut">Eine einzige Datei mit allen Konten, Buchungen, Projekten, Budget, Versicherungen, Haus- und Vorsorgedaten. Sie lässt sich in jedem Browser öffnen und drucken, auch ohne Claude. Die Fotos und PDFs der Belege sind nicht enthalten, nur ihre Namen. Originale also zusätzlich aufbewahren.</p>
+<div class="row"><button id="bak">Backup herunterladen</button><button class="ghost" id="rest">Backup wiederherstellen</button></div>`}
+
+let F={b:'',k:'',s:'',q:''};
+function vBuch(){let T=txY(Y).filter(t=>(!F.b||t.bereich===F.b)&&(!F.k||t.kategorie===F.k)&&(!F.s||t.status===F.s)&&(!F.q||(t.text+' '+(t.firma||'')+' '+(t.notiz||'')).toLowerCase().includes(F.q.toLowerCase())));
+T.sort((a,b)=>(a.datum||'9')<(b.datum||'9')?-1:1);
+const o=(arr,v)=>`<option value="">Alle</option>`+arr.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
+return `<div class="row" style="justify-content:space-between"><h2>Buchungen ${Y}</h2><div class="row"><button class="ghost" id="imp">CSV importieren</button><button class="ghost" id="csv">CSV exportieren</button><button id="newtx">Neue Buchung</button></div></div>
+<div class="filters"><label>Bereich<select id="fb">${o(bereiche(),F.b)}</select></label><label>Kategorie<select id="fk">${o(KAT,F.k)}</select></label><label>Status<select id="fs">${o(STATUS,F.s)}</select></label><label>Suche<input id="fq" value="${esc(F.q)}" placeholder="Text, Firma, Notiz"></label></div>
+<p class="mut">${T.length} Buchungen · Total CHF ${chf(sum(T,t=>t.betrag))}</p>
+${T.length?`<table class="stack"><thead><tr><th>Datum</th><th>Beschreibung</th><th>Bereich</th><th>Kategorie</th><th>Status</th><th class="n">CHF</th></tr></thead><tbody>${T.map(t=>`<tr class="click" data-tx="${esc(t._id)}"><td>${dt(t.datum)}</td><td>${esc(t.text)}<div class="mut">${esc([t.firma,t.konto&&accName(t.konto)].filter(Boolean).join(' · '))}</div></td><td>${esc(t.bereich)}</td><td>${esc(t.kategorie)}</td><td>${tag(t.status)}${t.belege?.length?' <span class="tag">Beleg</span>':''}</td><td class="n">${chf(t.betrag)}${t.abziehbar!=null&&t.abziehbar!==t.betrag?`<div class="mut">abz. ${chf(t.abziehbar)}</div>`:''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Keine Buchungen für diese Auswahl.</div>'}`}
+const accName=id=>S.acc.find(a=>a._id===id)?.name||'';
+
+function vKonten(){const g={};S.acc.forEach(a=>(g[a.typ]=g[a.typ]||[]).push(a));
+return `<div class="row" style="justify-content:space-between"><h2>Konten, Vorsorge und Hypothek</h2><button id="newacc">Neues Konto</button></div><p class="mut">Saldo und Zins jeweils per 31.12.${Y}. Antippen zum Bearbeiten.</p>
+${KTYP.filter(k=>g[k]).map(k=>`<h3>${esc(k)}</h3><table class="stack"><thead><tr><th>Konto</th><th>Inhaber</th><th>IBAN / Nr.</th><th class="n">Saldo ${Y}</th><th class="n">Zins ${Y}</th></tr></thead><tbody>${g[k].map(a=>`<tr class="click" data-acc="${esc(a._id)}"><td>${esc(a.name)}<div class="mut">${esc(a.bank||'')}${a.kontakt?' · '+esc(a.kontakt):''}</div></td><td>${esc(a.inhaber)}</td><td>${esc(a.iban||'')}</td><td class="n">${chf(saldo(a,Y))}</td><td class="n">${chf(a.zinsen?.[Y])}</td></tr>`).join('')}</tbody></table>`).join('')||'<div class="empty">Noch keine Konten erfasst.</div>'}`}
+
+function vHaus(){const h=S.haus,t=tax(Y),fr=(h.fristen||[]).slice().sort((a,b)=>a.datum<b.datum?-1:1);
+const rows=[['Adresse',h.adresse],['Grundbuch',h.grundbuch],['Eigentum seit',dt(h.kaufdatum)],['Kaufpreis',h.kaufpreis&&'CHF '+chf(h.kaufpreis)],['Amtlicher Wert',h.amtlicherWert&&'CHF '+chf(h.amtlicherWert)],['Eigenmietwert Kanton / Bund',h.eigenmietwert?'CHF '+chf(h.eigenmietwert)+' / '+(h.eigenmietwertBund?chf(h.eigenmietwertBund):'–'):'noch nicht erfasst'],['Gebäude älter als 10 Jahre',h.ueber10?'Ja':'Nein'],['Rechte und Lasten (Grundbuch)',h.rechte]];
+return `<div class="row" style="justify-content:space-between"><h2>Liegenschaft</h2><button id="edhaus">Bearbeiten</button></div>
+<div class="grid2"><div class="card"><table>${rows.map(([k,v])=>`<tr><td class="mut">${k}</td><td>${esc(v||'–')}</td></tr>`).join('')}</table></div>
+<div class="card"><h3 style="margin-top:0">Hypothek per 31.12.${Y}</h3>${t.hyp.length?`<table>${t.hyp.map(a=>`<tr><td>${esc(a.name)}<div class="mut">${esc(a.notiz||'')}</div></td><td class="n">${chf(saldo(a,Y))}</td></tr>`).join('')}<tr class="sum"><td>Schuldzinsen ${Y}</td><td class="n">${chf(t.zins)}</td></tr></table>`:'<p class="mut">Hypothek unter Konten erfassen (Typ Hypothek).</p>'}</div></div>
+${anlage()}<div class="row" style="justify-content:space-between"><h3>Fristen</h3><div class="row"><button class="ghost" id="icsall">Alle in Kalender</button><button class="ghost" id="newfr">Frist hinzufügen</button></div></div>
+${fr.length?`<table class="stack"><thead><tr><th>Datum</th><th>Was</th><th></th></tr></thead><tbody>${fr.map((f,i)=>`<tr><td>${dt(f.datum)}</td><td>${esc(f.text)}</td><td><button class="link" data-ics="${esc(f.datum+'|'+f.text)}">Kalender</button> <button class="link" data-delfr="${esc(f.datum+'|'+f.text)}">Entfernen</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Keine Fristen.</div>'}
+<div class="note" style="margin-top:18px">Ab Steuerjahr 2029 fallen Eigenmietwert und die Abzüge für Unterhalt und Schuldzinsen weg. Werterhaltende Arbeiten bis Ende 2028 abschliessen und bezahlen.</div>`}
+
+function checks(y){const t=tax(y),c=[];
+t.T.filter(x=>x.status==='Zu prüfen').forEach(x=>c.push(['Buchung zu prüfen',x.text+(x.firma?' · '+x.firma:''),x.betrag,x._id]));
+t.T.filter(x=>x.status==='Offen').forEach(x=>c.push(['Zahlung offen',x.text,x.betrag,x._id]));
+t.T.filter(x=>x.bereich==='Haus'&&x.status==='Bezahlt'&&['Unterhalt','Versicherung','Grundgebühren','Liegenschaftssteuer'].includes(x.kategorie)&&abz(x)>0&&!x.beleg&&!x.belege?.length).forEach(x=>c.push(['Beleg fehlt',x.text,abz(x),x._id]));
+S.acc.filter(a=>!['Pensionskasse'].includes(a.typ)&&saldo(a,y)==null).forEach(a=>c.push(['Saldo 31.12. fehlt',a.name+' ('+(a.bank||'')+')',null,null,a._id]));
+if(!t.emw)c.push(['Eigenmietwert Kanton fehlt','unter Haus erfassen',null]);if(!t.emwB)c.push(['Eigenmietwert Bund fehlt','unter Haus erfassen',null]);
+return c}
+function vSteuern(){const t=tax(Y),best=Math.max(t.uhB,t.pausch),eff=t.uhB>=t.pausch,bestB=Math.max(t.uhB,t.pauschB),C=checks(Y);
+const s3={};t.s3a.forEach(x=>s3[x.bereich]=(s3[x.bereich]||0)+(+x.betrag||0));
+return `<div class="row" style="justify-content:space-between"><h2>Steuererklärung ${Y}</h2><button id="copytax">Als Text kopieren</button></div>
+<p class="mut">Zum Übertragen in TaxMe (Kanton Bern). Für Bankkonten mit eSteuerauszug das PDF der Bank direkt hochladen.</p>
+<h3>Checkliste: noch offen (${C.length})</h3>${C.length?`<table class="stack"><thead><tr><th>Was</th><th>Betrifft</th><th class="n">CHF</th></tr></thead><tbody>${C.map(c=>`<tr ${c[3]?`class="click" data-tx="${esc(c[3])}"`:c[4]?`class="click" data-acc="${esc(c[4])}"`:''}><td>${tag(c[0])}</td><td>${esc(c[1])}</td><td class="n">${c[2]!=null?chf(c[2]):''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Alles vollständig für '+Y+'.</div>'}
+<h3>Wertschriften- und Guthabenverzeichnis</h3>${t.guth.length?`<table class="stack"><thead><tr><th>Konto</th><th>Inhaber</th><th class="n">Steuerwert 31.12.</th><th class="n">Ertrag</th></tr></thead><tbody>${t.guth.map(a=>`<tr><td>${esc(a.name)}<div class="mut">${esc(a.bank||'')}</div></td><td>${esc(a.inhaber)}</td><td class="n">${chf(saldo(a,Y))}</td><td class="n">${chf(a.zinsen?.[Y]||0)}</td></tr>`).join('')}<tr class="sum"><td>Total</td><td></td><td class="n">${chf(t.verm)}</td><td class="n">${chf(t.ertrag)}</td></tr></tbody></table>`:'<div class="empty">Keine Saldi für dieses Jahr erfasst.</div>'}
+<h3>Schuldenverzeichnis</h3>${t.hyp.length?`<table class="stack"><thead><tr><th>Gläubiger</th><th class="n">Schuld 31.12.</th><th class="n">Schuldzinsen</th></tr></thead><tbody>${t.hyp.map(a=>`<tr><td>${esc(a.bank||a.name)}</td><td class="n">${chf(saldo(a,Y))}</td><td class="n">${chf(a.zinsen?.[Y]??t.zins)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Keine Hypothek erfasst.</div>'}
+<h3>Liegenschaft (Formular 21b)</h3><table><thead><tr><th></th><th class="n">Kanton</th><th class="n">Bund</th></tr></thead><tbody>
+<tr><td>Eigenmietwert ${S.haus.emwJahre?.[Y]!=null?'(anteilig)':''}</td><td class="n">${t.emw?chf(t.emw):'fehlt'}</td><td class="n">${t.emwB?chf(t.emwB):'fehlt'}</td></tr>
+<tr><td>Tatsächliche Unterhaltskosten</td><td class="n">${chf(t.uh)}</td><td class="n">${chf(t.uh)}</td></tr>
+<tr><td>Prämien Sachversicherung Gebäude</td><td class="n">${chf(t.vers)}</td><td class="n">${chf(t.vers)}</td></tr>
+<tr><td>Wiederkehrende Grundgebühren</td><td class="n">${chf(t.gg)}</td><td class="n">${chf(t.gg)}</td></tr>
+<tr class="sum"><td>Total effektive Kosten</td><td class="n">${chf(t.uhB)}</td><td class="n">${chf(t.uhB)}</td></tr>
+<tr><td>Pauschalabzug ${t.pPct*100} %</td><td class="n">${t.emw?chf(t.pausch):'–'}</td><td class="n">${t.emwB?chf(t.pauschB):'–'}</td></tr>
+<tr class="sum"><td>Abzug (höherer Wert)</td><td class="n">${t.emw?(eff?'effektiv ':'pauschal ')+chf(best):'–'}</td><td class="n">${t.emwB?(t.uhB>=t.pauschB?'effektiv ':'pauschal ')+chf(bestB):'–'}</td></tr>
+<tr><td>Liegenschaftssteuer (zusätzlich, immer abziehbar)</td><td class="n">${chf(t.lst)}</td><td class="n">–</td></tr>
+<tr><td class="mut">noch zu prüfen, nicht eingerechnet</td><td class="n mut">${chf(t.uhP)}</td><td></td></tr></tbody></table>
+${t.emw?'':'<p class="mut">Den Eigenmietwert findest du auf der Steuerveranlagung oder der Bewertungsverfügung; unter Haus eintragen. Im Kaufjahr gilt er nur anteilig ab Eigentum.</p>'}
+${(()=>{const K=txY(Y).filter(x=>x.kapital);return K.length?`<h3>Kapitalleistungen aus Vorsorge (getrennt besteuert)</h3><table class="stack"><thead><tr><th>Datum</th><th>Person</th><th>Art</th><th class="n">CHF</th></tr></thead><tbody>${K.map(x=>`<tr class="click" data-tx="${esc(x._id)}"><td>${dt(x.datum)}</td><td>${esc(x.bereich)}</td><td>${esc(x.text)}<div class="mut">${esc(x.firma||'')}</div></td><td class="n">${chf(x.betrag)}</td></tr>`).join('')}</tbody></table><p class="mut">Die Vorsorgeeinrichtungen melden diese Bezüge der Steuerverwaltung. Sie werden separat zum Vorsorgetarif veranlagt und nicht zum übrigen Einkommen gezählt. In der Steuererklärung trotzdem angeben.</p>`:''})()}${(()=>{const K=(S.set.kinder||[]).map(k=>k.name).filter(Boolean);if(!K.length)return'';const T=txY(Y);const s=(n,c)=>sum(T.filter(x=>x.bereich===n&&x.kategorie===c&&x.status==='Bezahlt'),x=>x.betrag);
+return `<h3>Kinder</h3><table class="stack"><thead><tr><th>Kind</th><th>Geburt</th><th class="n">Kinderbetreuung</th><th class="n">Krankheitskosten</th><th class="n">Familienzulagen</th></tr></thead><tbody>${(S.set.kinder||[]).map(k=>`<tr><td>${esc(k.name)}</td><td>${k.geburt?dt(k.geburt):'–'}</td><td class="n">${chf(s(k.name,'Kinderbetreuung'))}</td><td class="n">${chf(s(k.name,'Krankheitskosten'))}</td><td class="n">${chf(s(k.name,'Familienzulagen'))}</td></tr>`).join('')}</tbody></table><p class="mut">Für die Kinderabzüge zählt der Stand am Jahresende. Familienzulagen sind Einkommen, Fremdbetreuung ist bis zu einem kantonalen Maximum abziehbar.</p>`})()}<h3>Säule 3a Einzahlungen</h3>${Object.keys(s3).length?`<table>${Object.entries(s3).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${chf(v)}</td></tr>`).join('')}</table>`:'<p class="mut">Keine Einzahlungen erfasst (Kategorie Säule 3a, Bereich = Person).</p>'}`}
+
+function taxText(){const t=tax(Y);let s=`Steuererklärung ${Y} – Familie Gerber\n\nGuthaben (Steuerwert 31.12. / Ertrag)\n`;
+t.guth.forEach(a=>s+=`- ${a.name} (${a.bank||''}, ${a.inhaber}): ${chf(saldo(a,Y))} / ${chf(a.zinsen?.[Y]||0)}\n`);
+s+=`Total: ${chf(t.verm)} / ${chf(t.ertrag)}\n\nSchulden\n`;t.hyp.forEach(a=>s+=`- ${a.bank||a.name}: ${chf(saldo(a,Y))}, Zinsen ${chf(a.zinsen?.[Y]??t.zins)}\n`);
+s+=`\nLiegenschaft (Formular 21b)\n- Eigenmietwert Kanton/Bund: ${t.emw?chf(t.emw):'fehlt'} / ${t.emwB?chf(t.emwB):'fehlt'}\n- Unterhalt ${chf(t.uh)}, Versicherung ${chf(t.vers)}, Grundgebühren ${chf(t.gg)} = effektiv ${chf(t.uhB)} (zu prüfen: ${chf(t.uhP)})\n- Pauschale Kanton/Bund: ${chf(t.pausch)} / ${chf(t.pauschB)}\n- Liegenschaftssteuer: ${chf(t.lst)}\n`;
+t.s3a.forEach(x=>s+=`- Säule 3a ${x.bereich}: ${chf(x.betrag)}\n`);txY(Y).filter(x=>x.kapital).forEach(x=>s+=`- Kapitalleistung ${x.bereich} ${dt(x.datum)}: ${x.text} ${chf(x.betrag)}\n`);return s}
+
+function vVers(){const per=v=>(+v.praemie||0)*({monatlich:12,quartalsweise:4}[v.intervall]||1);
+return `<div class="row" style="justify-content:space-between"><h2>Versicherungen</h2><button id="newins">Neue Versicherung</button></div><p class="mut">Total pro Jahr CHF ${chf(sum(S.ins,per))}</p>
+${S.ins.length?`<table class="stack"><thead><tr><th>Versicherung</th><th>Typ</th><th>Person</th><th>Police</th><th>Fällig / Ablauf</th><th class="n">CHF pro Jahr</th></tr></thead><tbody>${S.ins.map(v=>`<tr class="click" data-ins="${esc(v._id)}"><td>${esc(v.name)}<div class="mut">${esc(v.gesellschaft||'')}${v.kontakt?' · '+esc(v.kontakt):''}</div></td><td>${esc(v.typ)}</td><td>${esc(v.person)}</td><td>${esc(v.police||'')}</td><td>${esc(v.faellig||'')}</td><td class="n">${chf(per(v))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Noch keine Versicherungen erfasst.</div>'}`}
+
+/* Vermögensverlauf */
+function netY(y){const G=S.acc.filter(a=>!['Hypothek','Säule 3a','Pensionskasse'].includes(a.typ)),H=S.acc.filter(a=>a.typ==='Hypothek');
+const g=sum(G,a=>saldo(a,y)),h=sum(H,a=>saldo(a,y));return{y,g,h,n:g-h,mit:G.filter(a=>saldo(a,y)!=null).length+H.filter(a=>saldo(a,y)!=null).length,von:G.length+H.length}}
+function verlauf(){const ys=new Set();S.acc.forEach(a=>Object.keys(a.saldi||{}).forEach(k=>ys.add(+k)));const D=[...ys].sort().map(netY);if(!D.length)return'';
+const kj=+(S.haus.kaufdatum||'9999').slice(0,4),aw=+S.haus.amtlicherWert||0;
+const W=560,Hh=210,pad=28,hi=Math.max(0,...D.map(d=>d.n)),lo=Math.min(0,...D.map(d=>d.n)),rng=Math.max(1,hi-lo),sc=v=>v/rng*(Hh-70),y0=30+sc(hi),cw=(W-pad*2)/D.length,bw=Math.min(90,cw-24);
+const bars=D.map((d,i)=>{const x=pad+i*cw+(cw-bw)/2,h=Math.max(6,Math.abs(sc(d.n))),up=d.n>=0,yt=up?y0-h:y0;
+const path=up?`M${x},${y0}V${yt+4}q0,-4 4,-4h${bw-8}q4,0 4,4V${y0}Z`:`M${x},${y0}V${yt+h-4}q0,4 4,4h${bw-8}q4,0 4,-4V${y0}Z`;
+return `<g><title>${d.y}: Netto CHF ${chf0(d.n)} (Guthaben ${chf0(d.g)} − Hypothek ${chf0(d.h)}); ${d.mit} von ${d.von} Konten erfasst</title><rect x="${pad+i*cw}" y="0" width="${cw}" height="${Hh}" fill="transparent"/><path d="${path}" fill="var(--acc)" opacity="${d.mit<d.von?.5:1}"/><text x="${x+bw/2}" y="${up?yt-6:yt+h+16}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">${chf0(d.n)}</text><text x="${x+bw/2}" y="${Hh-4}" text-anchor="middle" font-size="13" fill="var(--mut)">${d.y}</text></g>`}).join('');
+return `<h3>Nettovermögen über die Jahre</h3><p class="mut">Wie oben ohne Haus, 3a und Pensionskasse. Helle Balken: noch nicht alle Konten erfasst.</p><svg viewBox="0 0 ${W} ${Hh}" style="width:100%;max-width:${W}px;height:auto" role="img" aria-label="Nettovermögen pro Jahr"><line x1="${pad}" x2="${W-pad}" y1="${y0}" y2="${y0}" stroke="var(--mut)" stroke-width="1"/>${bars}</svg>
+<table class="stack"><thead><tr><th>Jahr</th><th class="n">Guthaben</th><th class="n">Hypothek</th><th class="n">Netto</th><th class="n">mit Haus (amtl. Wert)</th><th>Erfasst</th></tr></thead><tbody>${D.map(d=>`<tr><td>${d.y}</td><td class="n">${chf0(d.g)}</td><td class="n">${chf0(d.h)}</td><td class="n">${chf0(d.n)}</td><td class="n">${d.y>=kj&&aw?chf0(d.n+aw):'–'}</td><td class="mut">${d.mit} von ${d.von} Konten${d.mit<d.von?' – unvollständig':''}</td></tr>`).join('')}</tbody></table>`}
+
+/* Anlagekosten für Grundstückgewinnsteuer */
+function anlage(){const kp=+S.haus.kaufpreis||0,isKP=t=>kp&&t.betrag===kp&&/kaufpreis/i.test(t.text);
+const A=S.tx.filter(t=>t.bereich==='Haus'&&(t.kategorie==='Anlagekosten'||t.kategorie==='Wertvermehrend')&&!isKP(t)).sort((a,b)=>a.datum<b.datum?-1:1);
+const ok=A.filter(t=>t.status==='Bezahlt'),pr=A.filter(t=>t.status!=='Bezahlt');
+const neb=sum(ok.filter(t=>t.kategorie==='Anlagekosten'),t=>t.betrag),wv=sum(ok.filter(t=>t.kategorie==='Wertvermehrend'),t=>t.betrag);
+return `<h3>Anlagekosten (für einen späteren Verkauf)</h3><p class="mut">Diese Summe zählt bei einem Verkauf für die Grundstückgewinnsteuer. Sie ist nicht vom Einkommen abziehbar. Belege aufbewahren, bis das Haus verkauft ist.</p>
+<table class="stack"><thead><tr><th>Datum</th><th>Posten</th><th>Status</th><th class="n">CHF</th></tr></thead><tbody>
+<tr><td>${dt(S.haus.kaufdatum)}</td><td>Kaufpreis</td><td>${tag('Bezahlt')}</td><td class="n">${chf(kp)}</td></tr>
+${A.map(t=>`<tr class="click" data-tx="${esc(t._id)}"><td>${dt(t.datum)}</td><td>${esc(t.text)}<div class="mut">${esc(t.kategorie)}</div></td><td>${tag(t.status)}</td><td class="n">${chf(t.betrag)}</td></tr>`).join('')}
+<tr class="sum"><td></td><td>Total bezahlt (Kaufpreis ${chf0(kp)} + Nebenkosten ${chf0(neb)} + wertvermehrend ${chf0(wv)})</td><td></td><td class="n">${chf(kp+neb+wv)}</td></tr></tbody></table>
+${pr.length?`<p class="mut">Noch nicht eingerechnet (offen oder zu prüfen): CHF ${chf(sum(pr,t=>t.betrag))}</p>`:''}`}
+
+/* Vorsorge */
+function vVorsorge(){const P=S.set.personen||[],mx=MAX3A[Y]??MAX3A[2026];
+const ein=p=>sum(txY(Y).filter(t=>t.kategorie==='Säule 3a'&&t.bereich===p&&t.status==='Bezahlt'),t=>t.betrag);
+const A=S.acc.filter(a=>a.typ==='Säule 3a'||a.typ==='Pensionskasse');const pk=S.acc.filter(a=>a.typ==='Pensionskasse'&&a.wef);
+return `<div class="row" style="justify-content:space-between"><h2>Vorsorge ${Y}</h2></div><p class="mut">Säule 3a: Maximalbetrag ${Y} für Angestellte mit Pensionskasse CHF ${chf0(mx)} pro Person. Die Einzahlung muss bis Ende Dezember gutgeschrieben sein.</p>
+<div class="grid2">${P.map(p=>{const e=ein(p),l=Math.max(0,mx-e);return `<div class="card"><h3 style="margin-top:0">${esc(p)} · Säule 3a</h3><div class="bar" style="grid-template-columns:minmax(0,1fr) auto"><span><i style="width:${Math.min(100,e/mx*100)}%;min-width:2px"></i></span><span>${chf0(e)} / ${chf0(mx)}</span></div>
+<p style="margin:10px 0 0">${l?`Noch möglich: <b>CHF ${chf(l)}</b>`:'Maximum ausgeschöpft.'}</p>${l&&Y>=2025?'<p class="mut">Ab 2026 lassen sich Lücken ab Steuerjahr 2025 unter Bedingungen nachzahlen, wenn das Maximum im laufenden Jahr bereits einbezahlt ist. Bei der Vorsorgestiftung nachfragen.</p>':''}</div>`}).join('')}</div>
+<h3>Konten 3a und Pensionskasse</h3>${A.length?`<table class="stack"><thead><tr><th>Konto</th><th>Person</th><th class="n">Saldo 31.12.${Y}</th><th>Notiz</th></tr></thead><tbody>${A.map(a=>`<tr class="click" data-acc="${esc(a._id)}"><td>${esc(a.name)}<div class="mut">${esc(a.bank||'')}</div></td><td>${esc(a.inhaber)}</td><td class="n">${saldo(a,Y)!=null?chf(saldo(a,Y)):'<span class="mut">fehlt</span>'}</td><td class="mut">${esc(a.notiz||'')}</td></tr>`).join('')}</tbody></table><p class="mut">Pensionskassen-Saldo vom Vorsorgeausweis übernehmen (antippen).</p>`:'<div class="empty">Keine Vorsorgekonten erfasst.</div>'}
+<h3>WEF-Vorbezug Pensionskasse</h3>${pk.length?pk.map(a=>{const o=(+a.wef||0)-(+a.wefRueck||0);return `<div class="card click" data-acc="${esc(a._id)}"><table>
+<tr><td class="mut">${esc(a.inhaber)} · ${esc(a.bank||a.name)}</td><td></td></tr><tr><td>Vorbezug ${a.wefDatum?dt(a.wefDatum):''}</td><td class="n">${chf(a.wef)}</td></tr><tr><td>Zurückbezahlt</td><td class="n">${chf(+a.wefRueck||0)}</td></tr><tr class="sum"><td>Noch offen</td><td class="n">${chf(o)}</td></tr>${a.einkauf?`<tr><td>Einkaufspotenzial (Ausweis)</td><td class="n">${chf(a.einkauf)}</td></tr>`:''}</table>
+<div class="note" style="margin-top:10px">Freiwillige Einkäufe in die Pensionskasse sind erst möglich, wenn der Vorbezug vollständig zurückbezahlt ist. Eine Rückzahlung (mindestens CHF 10'000 pro Mal) ist bis zur Entstehung des Anspruchs auf Altersleistungen möglich, ist nicht vom Einkommen abziehbar, und die damals bezahlte Kapitalleistungssteuer wird zinslos zurückerstattet. Bei einem Verkauf des Hauses muss der Vorbezug zurückbezahlt werden.</div></div>`}).join(''):'<p class="mut">Kein Vorbezug erfasst (bei der Pensionskasse unter Konten eintragen).</p>'}`}
+
+/* Hausprojekte */
+function vProj(){const sp=p=>sum(S.tx.filter(t=>t.projekt===p._id),t=>t.betrag);const ord=s=>PSTAT.indexOf(s);
+const P=S.proj.slice().sort((a,b)=>(ord(a.status)-ord(b.status))||((a.termin||'9')<(b.termin||'9')?-1:1));
+const offen=P.filter(p=>!['Erledigt','Verworfen'].includes(p.status));
+return `<div class="row" style="justify-content:space-between"><h2>Hausprojekte</h2><button id="newproj">Neues Projekt</button></div><p class="mut">Offene Projekte geschätzt CHF ${chf0(sum(offen,p=>p.schaetzung))}. Buchungen werden über das Feld «Hausprojekt» zugeordnet.</p>
+${P.length?`<table class="stack"><thead><tr><th>Projekt</th><th>Status</th><th>Steuer</th><th>Termin</th><th class="n">Schätzung</th><th class="n">Verbucht</th></tr></thead><tbody>${P.map(p=>{const late=/Unterhalt|Gemischt/.test(p.steuer||'')&&!['Erledigt','Verworfen'].includes(p.status)&&(!p.termin||p.termin>'2028-12-31');
+return `<tr class="click" data-proj="${esc(p._id)}"><td>${esc(p.name)}<div class="mut">${esc(p.notiz||'')}</div>${p.belege?.length?'<span class="tag">'+p.belege.length+' Dokument(e)</span>':''}</td><td><span class="tag">${esc(p.status)}</span></td><td>${esc(p.steuer||'')}${late?'<div class="tag o" style="margin-top:4px">bis Ende 2028 bezahlen</div>':''}</td><td>${dt(p.termin)}</td><td class="n">${chf(p.schaetzung)}</td><td class="n">${chf(sp(p))}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Noch keine Projekte.</div>'}
+<div class="note" style="margin-top:18px">Werterhaltende Arbeiten (Unterhalt) sind nur bis Steuerjahr 2028 abziehbar. Wertvermehrende Investitionen zählen als Anlagekosten bei einem Verkauf.</div>`}
+function projForm(p){p=p||{status:'Idee',steuer:'Zu klären'};
+form(p._id?'Projekt bearbeiten':'Neues Projekt',[['name','Projekt'],['status','Status','select',PSTAT],['steuer','Steuerliche Einordnung','select',PSTEU],['schaetzung','Kostenschätzung CHF','number'],['termin','Termin / Ziel','date'],['offerten','Offerten (Firma, Betrag, Datum)','area'],['belege','Offerten, Pläne (Foto oder PDF)','files'],['notiz','Notiz','area']],p,
+o=>put('projekte',p._id,{...p,...o}),p._id&&(()=>delDoc('projekte',p._id)))}
+
+/* Budget */
+const IV={monatlich:12,quartalsweise:4,halbjährlich:2,jährlich:1};
+function vBudget(){const pj=b=>(+b.betrag||0)*(IV[b.intervall]||1),insJ=sum(S.ins,v=>(+v.praemie||0)*({monatlich:12,quartalsweise:4}[v.intervall]||1));
+const B=S.bud.slice().sort((a,b)=>pj(b)-pj(a)),tot=sum(B,pj)+insJ;
+const ist=k=>sum(txY(Y).filter(t=>t.kategorie===k&&t.status==='Bezahlt'),t=>t.betrag);
+const byK={};B.forEach(b=>byK[b.kategorie]=(byK[b.kategorie]||0)+pj(b));
+return `<div class="row" style="justify-content:space-between"><h2>Budget Haushalt</h2><button id="newbud">Neuer Posten</button></div>
+<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:12px 0"><div class="kpi"><span class="mut">Fixkosten pro Monat</span><b>${chf0(tot/12)}</b></div><div class="kpi"><span class="mut">pro Jahr</span><b>${chf0(tot)}</b></div><div class="kpi"><span class="mut">pro Person und Monat (geteilt)</span><b>${chf0(tot/12/Math.max(1,(S.set.personen||[]).length))}</b></div></div>
+${B.length||insJ?`<table class="stack"><thead><tr><th>Posten</th><th>Kategorie</th><th>Intervall</th><th class="n">Betrag</th><th class="n">pro Monat</th></tr></thead><tbody>${B.map(b=>`<tr class="click" data-bud="${esc(b._id)}"><td>${esc(b.name)}<div class="mut">${esc(b.notiz||'')}</div></td><td>${esc(b.kategorie)}</td><td>${esc(b.intervall)}</td><td class="n">${chf(b.betrag)}</td><td class="n">${chf(pj(b)/12)}</td></tr>`).join('')}
+${insJ?`<tr><td>Versicherungen (aus Liste Versicherungen)</td><td>Versicherung</td><td>–</td><td class="n">${chf(insJ)}</td><td class="n">${chf(insJ/12)}</td></tr>`:''}</tbody></table>`:'<div class="empty">Noch keine Budgetposten.</div>'}
+<h3>Budget und effektiv bezahlt ${Y}</h3><table class="stack"><thead><tr><th>Kategorie</th><th class="n">Budget Jahr</th><th class="n">Bezahlt ${Y}</th></tr></thead><tbody>${Object.entries(byK).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${chf(v)}</td><td class="n">${chf(ist(k))}</td></tr>`).join('')}</tbody></table>
+<p class="mut">«Bezahlt» zählt nur erfasste Buchungen. Mit dem CSV-Import unter Buchungen wird der Vergleich vollständiger.</p>`}
+function budForm(b){b=b||{intervall:'monatlich',kategorie:'Lebenshaltung'};
+form(b._id?'Budgetposten bearbeiten':'Neuer Budgetposten',[['name','Posten'],['betrag','Betrag CHF','number'],['intervall','Intervall','select',Object.keys(IV)],['kategorie','Kategorie','select',KAT],['konto','Ab Konto','select',[['',''],...S.acc.map(a=>[a._id,a.name])]],['notiz','Notiz','area']],b,
+o=>put('budget',b._id,{...b,...o}),b._id&&(()=>delDoc('budget',b._id)))}
+
+/* Kalender (.ics) */
+async function ics(L){if(!L.length)return msg('Keine Fristen');const d=x=>x.replace(/-/g,''),nx=x=>{const t=new Date(x+'T12:00:00');t.setDate(t.getDate()+1);return t.toISOString().slice(0,10).replace(/-/g,'')},e=x=>x.replace(/[\\,;]/g,m=>'\\'+m).replace(/\n/g,'\\n');
+const st=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Familienfinanzen Gerber//DE',...L.flatMap((f,i)=>['BEGIN:VEVENT','UID:frist-'+d(f.datum)+'-'+i+'@gerber-finanzen','DTSTAMP:'+st,'DTSTART;VALUE=DATE:'+d(f.datum),'DTEND;VALUE=DATE:'+nx(f.datum),'SUMMARY:'+e(f.text.slice(0,70)),'DESCRIPTION:'+e(f.text),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+e(f.text.slice(0,70)),'TRIGGER:-P30D','END:VALARM','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+e(f.text.slice(0,70)),'TRIGGER:-P7D','END:VALARM','END:VEVENT']),'END:VCALENDAR'].join('\r\n');
+try{await saveFile(L.length>1?'Fristen.ics':'Frist_'+L[0].datum+'.ics',body);}catch(_){msg('Download nicht möglich')}}
+
+/* CSV-Import */
+const parseRegeln=t=>String(t||'').split('\n').map(l=>{const m=l.split('=');if(m.length<2)return null;const[b,k]=m.slice(1).join('=').split('/').map(x=>x.trim());return{m:m[0].trim().toLowerCase().split('|').map(x=>x.trim()).filter(Boolean),b,k}}).filter(r=>r&&r.m.length&&r.b&&r.k);
+function num(v){v=String(v??'').replace(/['’\s]/g,'').replace(/CHF/i,'');if(!v)return null;if(/,\d{1,2}$/.test(v)&&!/\.\d/.test(v))v=v.replace(/\./g,'').replace(',','.');else v=v.replace(/,/g,'');const n=parseFloat(v);return isNaN(n)?null:n}
+function pdate(v){v=String(v||'').trim();let m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[0];m=v.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`}return null}
+function splitCsv(line,dl){const o=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'&&line[i+1]==='"'){c+='"';i++}else if(ch==='"')q=false;else c+=ch}else if(ch==='"')q=true;else if(ch===dl){o.push(c);c=''}else c+=ch}o.push(c);return o.map(x=>x.trim())}
+function parseCsv(txt){const L=txt.replace(/^﻿/,'').split(/\r?\n/).filter(l=>l.trim());if(!L.length)return[];
+const dl=[';',',','\t'].sort((a,b)=>L.slice(0,10).join('').split(b).length-L.slice(0,10).join('').split(a).length)[0];
+let hi=L.findIndex(l=>/datum|date|valuta|buchungstag/i.test(l)&&/betrag|amount|belastung|gutschrift|debit|credit/i.test(l));if(hi<0)return[];
+const H=splitCsv(L[hi],dl).map(h=>h.toLowerCase()),f=re=>H.findIndex(h=>re.test(h));
+const iD=f(/buchungsdatum|^datum|date|buchungstag|valuta/),iA=f(/^betrag|amount|betrag/),iS=f(/belastung|debit|soll|lastschrift/),iH=f(/gutschrift|credit|haben/);
+const iT=H.map((h,i)=>/text|beschreibung|description|empfänger|auftraggeber|mitteilung|details|zahlungszweck|payee|merchant|name/.test(h)?i:-1).filter(i=>i>=0);
+return L.slice(hi+1).map(l=>{const c=splitCsv(l,dl),datum=pdate(c[iD]);let b=iA>=0?num(c[iA]):null;
+if(b==null){const s=iS>=0?num(c[iS]):null,h=iH>=0?num(c[iH]):null;b=s?-Math.abs(s):h?Math.abs(h):null}
+return datum&&b!=null&&b!==0?{datum,betrag:b,text:[...new Set(iT.map(i=>c[i]).filter(Boolean))].join(' · ').slice(0,160)}:null}).filter(Boolean)}
+let IMP=[];
+function impForm(){const f=$('#frm');const R=S.set.regeln??DEF_REGELN;
+f.innerHTML=`<h3 style="margin:0">Kontoauszug importieren (CSV)</h3><p class="mut" style="margin:0">CSV-Export aus E-Banking von neon, Cler oder Raiffeisen. Erkannte Buchungen sind vorausgewählt. Hausbuchungen kommen als «Zu prüfen» herein, damit du den Beleg anhängst.</p>
+<label>Konto<select id="ikonto">${S.acc.filter(a=>!['Hypothek','Pensionskasse','Anteilschein'].includes(a.typ)).map(a=>`<option value="${esc(a._id)}">${esc(a.name)}</option>`).join('')}</select></label>
+<label>CSV-Datei<input type="file" id="ifile" accept=".csv,text/csv,text/plain"></label>
+<details><summary class="mut" style="cursor:pointer">Zuordnungsregeln (Suchtext = Bereich / Kategorie)</summary><textarea id="iregeln" rows="8" style="margin-top:6px;font-size:13px">${esc(R)}</textarea></details>
+<div id="iprev" class="scroll"></div>
+<div class="row" style="justify-content:flex-end"><button type="button" class="ghost" id="fcan">Abbrechen</button><button type="submit" id="isave" disabled>Importieren</button></div>`;
+const prev=()=>{const rg=parseRegeln($('#iregeln').value),k=$('#ikonto').value;
+IMP=IMP.map(x=>{const lt=x.text.toLowerCase(),r=rg.find(r=>r.m.some(m=>lt.includes(m))),dup=S.tx.some(t=>t.datum===x.datum&&Math.abs((+t.betrag||0)-Math.abs(x.betrag))<0.005&&(!t.konto||t.konto===k));
+const inc=x.betrag>0;return{...x,r,dup,sel:x._touched?x.sel:(!!r&&!dup),bereich:r?r.b:inc?'Gemeinsam':'Haushalt',kategorie:r?r.k:inc?'Einkommen':'Lebenshaltung'}});
+const n=IMP.filter(x=>x.sel).length;$('#isave').disabled=!n;$('#isave').textContent=n?n+' importieren':'Importieren';
+$('#iprev').innerHTML=IMP.length?`<p class="mut">${IMP.length} Zeilen gelesen · ${IMP.filter(x=>x.r).length} erkannt · ${IMP.filter(x=>x.dup).length} schon erfasst</p><table style="font-size:13px"><tbody>${IMP.map((x,i)=>`<tr><td><input type="checkbox" data-i="${i}" ${x.sel?'checked':''} style="width:auto;min-height:auto"></td><td>${dt(x.datum)}</td><td>${esc(x.text)}<div class="mut">${esc(x.bereich)} / ${esc(x.kategorie)}${x.dup?' · schon erfasst':''}</div></td><td class="n">${chf(x.betrag)}</td></tr>`).join('')}</tbody></table>`:'';
+$('#iprev').querySelectorAll('[data-i]').forEach(c=>c.onchange=()=>{const x=IMP[+c.dataset.i];x.sel=c.checked;x._touched=true;prev()})};
+$('#ifile').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;const buf=await fl.arrayBuffer();let t=new TextDecoder('utf-8').decode(buf);if(t.includes('\uFFFD'))t=new TextDecoder('windows-1252').decode(buf);IMP=parseCsv(t);if(!IMP.length)msg('Keine Buchungen erkannt – Spalten Datum und Betrag nötig');prev()};
+$('#iregeln').onchange=prev;$('#ikonto').onchange=prev;$('#fcan').onclick=()=>$('#dlg').close();
+dlgSave=async()=>{const k=$('#ikonto').value,R2=$('#iregeln').value;if(R2!==R)await setDoc('settings',{...S.set,regeln:R2});
+for(const x of IMP.filter(x=>x.sel)){await put('tx',null,{datum:x.datum,text:x.text,betrag:Math.abs(x.betrag),bereich:x.bereich,kategorie:x.kategorie,status:x.bereich==='Haus'?'Zu prüfen':'Bezahlt',steuerjahr:+x.datum.slice(0,4),konto:k,firma:'',beleg:'',notiz:'CSV-Import'})}};
+IMP=[];$('#dlg').showModal()}
+
+
+/* Datensicherung */
+function backup(){const now=new Date(),d=now.toISOString().slice(0,10);
+const data={app:'Familienfinanzen Gerber',version:1,exportiert:now.toISOString(),tx:S.tx,accounts:S.acc,insurances:S.ins,projekte:S.proj,budget:S.bud,haus:S.haus,settings:S.set};
+const T=(cols,rows)=>`<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((v,i)=>`<td${typeof v==='number'?' class="n"':''}>${typeof v==='number'?chf(v):esc(v??'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+const yrs=o=>Object.entries(o||{}).sort().map(([y,v])=>`${y}: ${chf(v)}`).join(' · ');
+const tx=S.tx.slice().sort((a,b)=>(a.datum||'')<(b.datum||'')?-1:1);
+const h=S.haus;
+const html=`<!DOCTYPE html><html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backup Familienfinanzen Gerber ${d}</title>
+<style>body{font:14px/1.45 system-ui,sans-serif;color:#101418;max-width:1200px;margin:0 auto;padding:24px}h1{font-size:24px}h2{font-size:18px;margin-top:28px;border-bottom:2px solid #101418;padding-bottom:4px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border-bottom:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top}th{color:#555}.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.m{color:#555}@media print{h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body>
+<h1>Familienfinanzen Gerber – Datensicherung</h1><p class="m">Erstellt ${now.toLocaleString('de-CH')}. ${S.tx.length} Buchungen, ${S.acc.length} Konten, ${S.ins.length} Versicherungen, ${S.proj.length} Projekte, ${S.bud.length} Budgetposten. Wiederherstellen: in der App unter Übersicht → «Backup wiederherstellen» diese Datei wählen.</p>
+<h2>Liegenschaft</h2>${T(['Feld','Wert'],[['Adresse',h.adresse],['Grundbuch',h.grundbuch],['Eigentum seit',dt(h.kaufdatum)],['Kaufpreis',h.kaufpreis],['Amtlicher Wert',h.amtlicherWert],['Eigenmietwert Kanton / Bund',`${chf(h.eigenmietwert)} / ${chf(h.eigenmietwertBund)}`],['Rechte und Lasten',h.rechte],['Notiz',h.notiz]])}
+<h2>Fristen</h2>${T(['Datum','Was'],(h.fristen||[]).map(f=>[dt(f.datum),f.text]))}
+<h2>Konten, Vorsorge, Hypothek</h2>${T(['Konto','Bank','Typ','Inhaber','IBAN / Nr.','Saldi 31.12.','Zinsen/Ertrag','Notiz'],S.acc.map(a=>[a.name,a.bank,a.typ,a.inhaber,a.iban,yrs(a.saldi),yrs(a.zinsen),[a.wef?`WEF-Vorbezug ${chf(a.wef)} (${dt(a.wefDatum)}), zurückbezahlt ${chf(+a.wefRueck||0)}`:'',a.notiz].filter(Boolean).join(' – ')]))}
+<h2>Buchungen</h2>${T(['Datum','Beschreibung','Bereich','Kategorie','Status','Steuerjahr','Betrag','Abziehbar','Firma','Beleg','Notiz'],tx.map(t=>[dt(t.datum),t.text,t.bereich,t.kategorie,t.status,String(t.steuerjahr??''),t.betrag??'',t.abziehbar??'',t.firma,[t.beleg,...(t.belege||[]).map(b=>b.name)].filter(Boolean).join('; '),t.notiz]))}
+<h2>Versicherungen</h2>${T(['Versicherung','Gesellschaft','Typ','Person','Police','Prämie','Intervall','Fällig','Notiz'],S.ins.map(v=>[v.name,v.gesellschaft,v.typ,v.person,v.police,v.praemie??'',v.intervall,v.faellig,v.notiz]))}
+<h2>Hausprojekte</h2>${T(['Projekt','Status','Steuer','Termin','Schätzung','Offerten','Notiz'],S.proj.map(p=>[p.name,p.status,p.steuer,dt(p.termin),p.schaetzung??'',p.offerten,p.notiz]))}
+<h2>Budget</h2>${T(['Posten','Kategorie','Intervall','Betrag','Notiz'],S.bud.map(b=>[b.name,b.kategorie,b.intervall,b.betrag??'',b.notiz]))}
+<script type="application/json" id="finanzen-backup">${JSON.stringify(data).replace(/</g,'\\u003c')}<\/script><\/body><\/html>`;
+(async()=>{try{await saveFile(`Familienfinanzen_Backup_${d}.html`,html);msg('Backup erstellt')}catch(_){msg('Download nicht möglich')}})()}
+function restoreForm(){const f=$('#frm');let B=null;
+f.innerHTML=`<h3 style="margin:0">Backup wiederherstellen</h3><p class="mut" style="margin:0">Backup-Datei (.html) wählen. Einträge mit gleicher Kennung werden überschrieben, alle anderen bleiben bestehen. Es wird nichts gelöscht.</p>
+<label>Backup-Datei<input type="file" id="rfile" accept=".html,.json,text/html,application/json"></label><div id="rinfo" class="mut"></div>
+<div class="row" style="justify-content:flex-end"><button type="button" class="ghost" id="fcan">Abbrechen</button><button type="submit" id="rsave" disabled>Wiederherstellen</button></div>`;
+$('#fcan').onclick=()=>$('#dlg').close();
+$('#rfile').onchange=async e=>{const t=await e.target.files[0].text();try{const m=t.match(/<script type="application\/json" id="finanzen-backup">([\s\S]*?)<\/script>/);B=JSON.parse(m?m[1]:t);if(B.app!=='Familienfinanzen Gerber'&&!B.v)throw 0;B.exportiert=B.exportiert||new Date().toISOString();
+$('#rinfo').textContent=`Backup vom ${new Date(B.exportiert).toLocaleString('de-CH')}: ${B.tx.length} Buchungen, ${B.accounts.length} Konten, ${B.insurances.length} Versicherungen, ${B.projekte.length} Projekte, ${B.budget.length} Budgetposten.`;$('#rsave').disabled=false}catch(_){B=null;$('#rinfo').textContent='Keine gültige Backup-Datei.';$('#rsave').disabled=true}};
+dlgSave=async()=>{if(!B)return;for(const[c,arr]of[['tx',B.tx],['accounts',B.accounts],['insurances',B.insurances],['projekte',B.projekte],['budget',B.budget]])for(const o of arr||[])if(o._id)await put(c,o._id,o,true);
+if(B.haus)await setDoc('haus',B.haus);if(B.settings)await setDoc('settings',B.settings)};
+$('#dlg').showModal()}
+
+/* Formular */
+function form(title,fields,data,onSave,onDel){const f=$('#frm');
+f.innerHTML=`<h3 style="margin:0">${esc(title)}</h3>`+fields.map(([k,l,t,opts])=>{const v=data[k]??'';
+if(t==='select')return `<label>${l}<select name="${k}">${opts.map(o=>{const[val,lab]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}" ${String(val)===String(v)?'selected':''}>${esc(lab)}</option>`}).join('')}</select></label>`;
+if(t==='check')return `<label style="display:flex;gap:10px;align-items:center"><input type="checkbox" name="${k}" ${v?'checked':''} style="width:auto;min-height:auto">${l}</label>`;
+if(t==='area')return `<label>${l}<textarea name="${k}" rows="2">${esc(v)}</textarea></label>`;
+if(t==='files'){FL=[...(data[k]||[])];return `<div><div style="font-size:14px;font-weight:600">${l}</div><div id="flist" class="mut"></div>${true?`<label class="ghost" style="display:inline-flex;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer">Foto / PDF hinzufügen<input type="file" id="fup" accept="image/*,application/pdf" multiple style="display:none"></label>`:'<p class="mut">Hochladen nur für Bearbeiter verfügbar.</p>'}</div>`}
+return `<label>${l}<input name="${k}" type="${t||'text'}" ${t==='number'?'step="0.01" inputmode="decimal"':''} value="${esc(v)}"></label>`}).join('')+
+`<div class="row" style="justify-content:space-between;margin-top:6px"><div>${onDel?'<button type="button" class="ghost" id="fdel">Löschen</button>':''}</div><div class="row"><button type="button" class="ghost" id="fcan">Abbrechen</button><button type="submit">Speichern</button></div></div>`;
+dlgSave=async()=>{const o={};fields.forEach(([k,,t])=>{if(t==='files'){o[k]=FL;return}const el=f.elements[k];o[k]=t==='check'?el.checked:t==='number'?(el.value===''?null:+el.value):el.value.trim()});return onSave(o)};
+if($('#flist')){drawFL();const up=$('#fup');if(up)up.onchange=async()=>{for(const file of up.files){try{msg('Lade hoch …');const r=await addBeleg(file);FL.push(r);drawFL()}catch(e){msg('Upload fehlgeschlagen')}}up.value=''}}
+$('#fcan').onclick=()=>$('#dlg').close();if(onDel)$('#fdel').onclick=async()=>{if($('#fdel').dataset.c){await onDel();$('#dlg').close()}else{$('#fdel').dataset.c=1;$('#fdel').textContent='Wirklich löschen?'}};
+$('#dlg').showModal();}
+$('#frm').addEventListener('submit',async e=>{e.preventDefault();try{await dlgSave();$('#dlg').close();msg('Gespeichert')}catch(err){msg('Speichern fehlgeschlagen: '+(err?.code||err?.message||''))}});
+let FL=[];
+function drawFL(){const el=$('#flist');el.innerHTML=FL.length?FL.map((b,i)=>`<div class="row"><a href="${esc(belegUrl(b))}" target="_blank" rel="noopener">${esc(b.name||'Beleg '+(i+1))}</a><button type="button" class="link" data-rmb="${i}">entfernen</button></div>`).join(''):'Noch kein Beleg angehängt.';el.querySelectorAll('[data-rmb]').forEach(b=>b.onclick=()=>{FL.splice(+b.dataset.rmb,1);drawFL()})}
+const clean=o=>{const c={...o};delete c._id;return c};
+
+
+function txForm(t){t=t||{datum:new Date().toISOString().slice(0,10),steuerjahr:Y,status:'Bezahlt',bereich:'Haus',kategorie:'Unterhalt'};
+form(t._id?'Buchung bearbeiten':'Neue Buchung',[['datum','Datum','date'],['text','Beschreibung'],['betrag','Betrag bezahlt CHF','number'],['abziehbar','davon steuerlich abziehbar (leer = ganzer Betrag)','number'],['bereich','Bereich','select',bereiche()],['kategorie','Kategorie','select',KAT],['status','Status','select',STATUS],['steuerjahr','Steuerjahr','number'],['firma','Firma / Stelle'],['konto','Bezahlt ab Konto','select',[['',''],...S.acc.map(a=>[a._id,a.name])]],['projekt','Hausprojekt','select',[['',''],...S.proj.map(p=>[p._id,p.name])]],['beleg','Beleg / Archiv-Nr.'],['belege','Belege (Foto oder PDF)','files'],['notiz','Notiz','area']],t,
+o=>put('tx',t._id,{...t,...o}),t._id&&(()=>delDoc('tx',t._id)))}
+function accForm(a){a=a||{typ:'Privatkonto',inhaber:'Gemeinsam'};
+form(a._id?'Konto bearbeiten':'Neues Konto',[['name','Bezeichnung'],['bank','Bank / Anbieter'],['typ','Typ','select',KTYP],['inhaber','Inhaber','select',[...(S.set.personen||[]),'Gemeinsam']],['iban','IBAN / Nummer'],['kontakt','Ansprechperson / Telefon'],['s','Saldo 31.12.'+Y,'number'],['z','Zins / Ertrag '+Y,'number'],...(a.typ==='Pensionskasse'?[['wef','WEF-Vorbezug CHF','number'],['wefDatum','WEF-Vorbezug Datum','date'],['wefRueck','davon zurückbezahlt CHF','number'],['einkauf','Einkaufspotenzial laut Vorsorgeausweis','number']]:[]),['belege','Dokumente (Ausweise, Auszüge)','files'],['notiz','Notiz','area']],{...a,s:saldo(a,Y),z:a.zinsen?.[Y]},
+o=>{const n={...a,...o};n.saldi={...(a.saldi||{})};n.zinsen={...(a.zinsen||{})};if(o.s==null)delete n.saldi[Y];else n.saldi[Y]=o.s;if(o.z==null)delete n.zinsen[Y];else n.zinsen[Y]=o.z;delete n.s;delete n.z;return put('accounts',a._id,n)},a._id&&(()=>delDoc('accounts',a._id)))}
+function insForm(v){v=v||{typ:'Gebäude',person:'Gemeinsam',intervall:'jährlich'};
+form(v._id?'Versicherung bearbeiten':'Neue Versicherung',[['name','Bezeichnung'],['gesellschaft','Gesellschaft'],['typ','Typ','select',VTYP],['person','Person','select',[...(S.set.personen||[]),'Gemeinsam']],['police','Police-Nr.'],['praemie','Prämie CHF','number'],['intervall','Intervall','select',['jährlich','quartalsweise','monatlich']],['faellig','Fällig / Ablauf'],['kontakt','Ansprechperson / Telefon'],['belege','Police / Dokumente','files'],['notiz','Notiz','area']],v,
+o=>put('insurances',v._id,{...v,...o}),v._id&&(()=>delDoc('insurances',v._id)))}
+function hausForm(){const h=S.haus;form('Liegenschaft bearbeiten',[['adresse','Adresse'],['grundbuch','Grundbuch'],['kaufdatum','Eigentum seit','date'],['kaufpreis','Kaufpreis','number'],['amtlicherWert','Amtlicher Wert','number'],['eigenmietwert','Eigenmietwert Kanton pro Jahr','number'],['eigenmietwertBund','Eigenmietwert Bund pro Jahr','number'],['ueber10','Gebäude älter als 10 Jahre (Pauschale 20 %)','check'],['rechte','Rechte und Lasten (Grundbuch)','area'],['personen','Personen (kommagetrennt, z. B. Kinder ergänzen)']],{...h,personen:(S.set.personen||[]).join(', ')},
+async o=>{const p=o.personen.split(',').map(s=>s.trim()).filter(Boolean);delete o.personen;await setDoc('haus',{...h,...o});await setDoc('settings',{...S.set,personen:p})})}
+function frForm(){form('Frist hinzufügen',[['datum','Datum','date'],['text','Was']],{},o=>setDoc('haus',{...S.haus,fristen:[...(S.haus.fristen||[]),o]}))}
+
+function bind(){const m=$('#main');
+m.querySelectorAll('[data-tx]').forEach(r=>r.onclick=()=>txForm(S.tx.find(x=>x._id===r.dataset.tx)));
+m.querySelectorAll('[data-acc]').forEach(r=>r.onclick=()=>accForm(S.acc.find(x=>x._id===r.dataset.acc)));
+m.querySelectorAll('[data-ins]').forEach(r=>r.onclick=()=>insForm(S.ins.find(x=>x._id===r.dataset.ins)));
+m.querySelectorAll('[data-delfr]').forEach(b=>b.onclick=()=>{const k=b.dataset.delfr;setDoc('haus',{...S.haus,fristen:(S.haus.fristen||[]).filter(f=>f.datum+'|'+f.text!==k)})});
+const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+on('#newtx',()=>txForm());on('#newacc',()=>accForm());on('#newins',()=>insForm());on('#edhaus',hausForm);on('#newfr',frForm);
+on('#copytax',async()=>{try{await navigator.clipboard.writeText(taxText());msg('In die Zwischenablage kopiert')}catch(e){msg('Kopieren nicht möglich')}});
+on('#csv',exportCsv);bindErfassen();if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
+m.querySelectorAll('[data-proj]').forEach(r=>r.onclick=()=>projForm(S.proj.find(x=>x._id===r.dataset.proj)));
+m.querySelectorAll('[data-bud]').forEach(r=>r.onclick=()=>budForm(S.bud.find(x=>x._id===r.dataset.bud)));
+m.querySelectorAll('[data-ics]').forEach(b=>b.onclick=()=>ics((S.haus.fristen||[]).filter(f=>f.datum+'|'+f.text===b.dataset.ics)));
+[['#fb','b'],['#fk','k'],['#fs','s']].forEach(([id,k])=>{const e=$(id);if(e)e.onchange=()=>{F[k]=e.value;render()}});
+const q=$('#fq');if(q){q.oninput=()=>{F.q=q.value;clearTimeout(q._t);q._t=setTimeout(()=>{render();const n=$('#fq');n.focus();n.setSelectionRange(n.value.length,n.value.length)},300)}}}
+
+async function exportCsv(){const T=txY(Y),c=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+const csv='﻿'+['Datum;Beschreibung;Bereich;Kategorie;Betrag;Abziehbar;Steuerjahr;Status;Firma;Konto;Beleg;Notiz',...T.map(t=>[t.datum,t.text,t.bereich,t.kategorie,(t.betrag??'').toString().replace('.',','),(abz(t)??'').toString().replace('.',','),t.steuerjahr,t.status,t.firma,accName(t.konto),t.beleg,t.notiz].map(c).join(';'))].join('\n');
+try{await saveFile(`Buchungen_${Y}.csv`,csv);}catch(e){try{await navigator.clipboard.writeText(csv);msg('Download nicht möglich, CSV kopiert')}catch(_){msg('Export nicht möglich')}}}
+
+$('#year').onchange=e=>{Y=+e.target.value;try{localStorage.setItem('fy',Y)}catch(_){}render()};
+function route(){const h=location.hash.slice(1);view=VIEWS.some(v=>v[0]===h)?h:'uebersicht';render()}
+window.addEventListener('hashchange',route);nav();
+
+/* ===== Lokale Datenhaltung (IndexedDB) ===== */
+const COLS={tx:'tx',accounts:'acc',insurances:'ins',projekte:'proj',budget:'bud'};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+let IDB=null;
+function idb(){return IDB||(IDB=new Promise((res,rej)=>{const r=indexedDB.open('familienfinanzen',1);r.onupgradeneeded=()=>{r.result.createObjectStore('kv');r.result.createObjectStore('files')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function kv(store,key,val){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction(store,val===undefined?'readonly':'readwrite'),s=t.objectStore(store);const q=val===undefined?s.get(key):val===null?s.delete(key):s.put(val,key);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+async function kvKeys(store){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction(store).objectStore(store).getAllKeys();q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+function snapshot(){const o={v:2,tomb:S.tomb||{},haus:S.haus,settings:S.set};for(const[c,k]of Object.entries(COLS))o[c]=S[k];return o}
+function loadSnap(o){for(const[c,k]of Object.entries(COLS))S[k]=o?.[c]||[];S.haus=o?.haus||{};S.set=o?.settings||{personen:['Lukas','Annika']};S.tomb=o?.tomb||{}}
+let saveT=null;
+async function persist(){await kv('kv','data',snapshot());await kv('kv','dirty',true);clearTimeout(saveT);saveT=setTimeout(()=>sync(false),2500);setSync()}
+async function put(col,id,o,keepTs){id=id||uid();const k=COLS[col];const rec={...clean(o),_id:id,updatedAt:keepTs&&o.updatedAt?o.updatedAt:Date.now()};
+const i=S[k].findIndex(x=>x._id===id);if(i>=0)S[k][i]=rec;else S[k].push(rec);await persist();render();return id}
+async function delDoc(col,id){const k=COLS[col];S[k]=S[k].filter(x=>x._id!==id);(S.tomb[col]=S.tomb[col]||{})[id]=Date.now();await persist();render()}
+async function setDoc(which,obj){const v={...obj,updatedAt:Date.now()};if(which==='haus')S.haus=v;else S.set=v;await persist();render()}
+
+/* ===== Dateien speichern (Download / Teilen) ===== */
+async function saveFile(name,data,type){const blob=data instanceof Blob?data:new Blob([data],{type:type||(name.endsWith('.csv')?'text/csv':name.endsWith('.ics')?'text/calendar':name.endsWith('.html')?'text/html':'application/octet-stream')});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+
+/* ===== Belege ===== */
+const LOCALURL={};
+async function addBeleg(file){const key='local:'+uid();await kv('files',key,{blob:file,name:file.name,type:file.type});LOCALURL[key]=URL.createObjectURL(file);setTimeout(()=>sync(false),500);return{id:key,name:file.name}}
+const belegUrl=b=>b.link||LOCALURL[b.id]||'#';
+
+/* ===== Google Drive ===== */
+const SCOPE='https://www.googleapis.com/auth/drive';
+const API='https://www.googleapis.com/drive/v3',UP='https://www.googleapis.com/upload/drive/v3';
+const CFG={get clientId(){return (window.FF_CONFIG&&FF_CONFIG.googleClientId)||localStorage.getItem('ff_client')||''},
+get folder(){return localStorage.getItem('ff_folder')||''},get file(){return localStorage.getItem('ff_file')||''},get belege(){return localStorage.getItem('ff_belege')||''},get backups(){return localStorage.getItem('ff_backups')||''}};
+let TOKEN=null,TOKEN_EXP=0,tokenClient=null,SYNC={state:'lokal',last:null,err:''};
+function setCfg(k,v){if(v)localStorage.setItem('ff_'+k,v);else localStorage.removeItem('ff_'+k)}
+function gisReady(){return !!(window.google&&google.accounts&&google.accounts.oauth2)}
+function getToken(interactive){return new Promise((res,rej)=>{
+if(!TOKEN){try{const t=JSON.parse(sessionStorage.getItem('ff_tok')||'null');if(t&&Date.now()<t.exp-60000){TOKEN=t.tok;TOKEN_EXP=t.exp}}catch(_){}}
+if(TOKEN&&Date.now()<TOKEN_EXP-60000)return res(TOKEN);
+if(!interactive)return rej(new Error('LOGIN'));
+if(!CFG.clientId)return rej(new Error('Keine Google Client-ID eingetragen'));if(!gisReady())return rej(new Error('Google-Anmeldung nicht geladen (offline?)'));
+tokenClient=google.accounts.oauth2.initTokenClient({client_id:CFG.clientId,scope:SCOPE,callback:r=>{if(r.error)return rej(new Error(r.error));TOKEN=r.access_token;TOKEN_EXP=Date.now()+(r.expires_in||3600)*1000;try{sessionStorage.setItem('ff_tok',JSON.stringify({tok:TOKEN,exp:TOKEN_EXP}))}catch(_){}localStorage.setItem('ff_signed','1');res(TOKEN)},error_callback:e=>rej(new Error(e.type==='popup_closed'?'Anmeldung abgebrochen':e.type||'Anmeldung fehlgeschlagen'))});
+tokenClient.requestAccessToken({prompt:localStorage.getItem('ff_signed')?'':'consent'})})}
+async function gapi(path,opt={},interactive){const t=await getToken(interactive);const r=await fetch(path.startsWith('http')?path:API+path,{...opt,headers:{Authorization:'Bearer '+t,...(opt.headers||{})}});
+if(r.status===401){TOKEN=null;sessionStorage.removeItem('ff_tok');throw new Error('LOGIN')}if(!r.ok)throw new Error('Drive '+r.status+': '+(await r.text()).slice(0,160));return r}
+const q=s=>encodeURIComponent(s);
+async function dFind(qs){const r=await gapi(`/files?q=${q(qs)}&fields=files(id,name,parents,modifiedTime,owners(displayName))&supportsAllDrives=true&includeItemsFromAllDrives=true&pageSize=50`);return (await r.json()).files||[]}
+async function dFolder(name,parent){const ex=await dFind(`name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`+(parent?` and '${parent}' in parents`:''));if(ex.length)return ex[0].id;
+const r=await gapi('/files?fields=id&supportsAllDrives=true',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:parent?[parent]:undefined})});return (await r.json()).id}
+async function dUpload(meta,blob,id){const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));fd.append('file',blob);
+const r=await gapi(`${UP}/files${id?'/'+id:''}?uploadType=multipart&fields=id,version,webViewLink&supportsAllDrives=true`,{method:id?'PATCH':'POST',body:fd});return r.json()}
+async function driveSetupNew(){SYNC.state='verbinde';setSync();await getToken(true);const root=await dFolder('Familienfinanzen Gerber');const bel=await dFolder('Belege',root);const bak=await dFolder('Backups',root);
+const ex=await dFind(`name='daten.json' and '${root}' in parents and trashed=false`);let fid=ex[0]?.id;
+if(!fid){const f=await dUpload({name:'daten.json',parents:[root],mimeType:'application/json'},new Blob([JSON.stringify(snapshot())],{type:'application/json'}));fid=f.id}
+setCfg('folder',root);setCfg('file',fid);setCfg('belege',bel);setCfg('backups',bak);await sync(true);msg('Mit Google Drive verbunden')}
+async function driveConnectExisting(){await getToken(true);const L=await dFind(`name='daten.json' and trashed=false`);if(!L.length)throw new Error('Keine daten.json gefunden. Ist der Ordner «Familienfinanzen Gerber» mit dir geteilt?');
+const f=L[0],root=f.parents?.[0];if(!root)throw new Error('Ordner der Datendatei nicht erreichbar');setCfg('folder',root);setCfg('file',f.id);setCfg('belege',await dFolder('Belege',root));setCfg('backups',await dFolder('Backups',root));
+await kv('kv','remoteVersion',null);await sync(true);msg('Verbunden mit '+(f.owners?.[0]?.displayName||'gemeinsamem Ordner'))}
+function mergeData(a,b){const out={v:2,tomb:{}};for(const c of Object.keys(COLS)){const T={...(a.tomb?.[c]||{})};for(const[i,t]of Object.entries(b.tomb?.[c]||{}))T[i]=Math.max(T[i]||0,t);out.tomb[c]=T;
+const m=new Map();for(const r of[...(a[c]||[]),...(b[c]||[])]){const o=m.get(r._id);if(!o||(r.updatedAt||0)>(o.updatedAt||0))m.set(r._id,r)}
+out[c]=[...m.values()].filter(r=>!(T[r._id]&&T[r._id]>=(r.updatedAt||0)))}
+for(const k of['haus','settings'])out[k]=((a[k]?.updatedAt||0)>=(b[k]?.updatedAt||0)?a[k]:b[k])||a[k]||b[k]||{};return out}
+let syncing=false;
+async function uploadPending(){const keys=(await kvKeys('files')).filter(k=>String(k).startsWith('local:'));let n=0;
+for(const key of keys){const f=await kv('files',key);if(!f)continue;const nm=(f.name||'beleg').replace(/[\\/:*?"<>|]+/g,'_');
+const yearF=await dFolder(String(new Date().getFullYear()),CFG.belege);const r=await dUpload({name:nm,parents:[yearF]},f.blob);
+for(const k of Object.values(COLS))for(const rec of S[k])if(rec.belege?.some(b=>b.id===key)){rec.belege=rec.belege.map(b=>b.id===key?{id:r.id,name:b.name,link:r.webViewLink}:b);rec.updatedAt=Date.now()}
+await kv('files',key,null);n++}
+if(n){await kv('kv','data',snapshot());await kv('kv','dirty',true)}return n}
+async function dailyBackup(data){const d=new Date().toISOString().slice(0,10);if(localStorage.getItem('ff_lastbak')===d||!CFG.backups)return;
+const ex=await dFind(`name='daten_${d}.json' and '${CFG.backups}' in parents and trashed=false`);if(!ex.length)await dUpload({name:`daten_${d}.json`,parents:[CFG.backups]},new Blob([JSON.stringify(data)],{type:'application/json'}));localStorage.setItem('ff_lastbak',d)}
+async function sync(interactive){if(syncing||!CFG.file)return;if(!navigator.onLine){SYNC.state='offline';setSync();return}syncing=true;SYNC.state='sync';setSync();
+try{await uploadPending();const meta=await (await gapi(`/files/${CFG.file}?fields=version,modifiedTime&supportsAllDrives=true`,{},interactive)).json();
+const lastV=await kv('kv','remoteVersion'),dirty=await kv('kv','dirty');let data=snapshot();
+if(meta.version!==lastV){const remote=await (await gapi(`/files/${CFG.file}?alt=media&supportsAllDrives=true`)).json();data=mergeData(data,remote);loadSnap(data);await kv('kv','data',data)}
+if(dirty||meta.version!==lastV){const r=await dUpload({},new Blob([JSON.stringify(data)],{type:'application/json'}),CFG.file);await kv('kv','remoteVersion',r.version);await kv('kv','dirty',false)}
+await dailyBackup(data);SYNC={state:'ok',last:new Date(),err:''};render()}
+catch(e){SYNC=e.message==='LOGIN'?{state:'login',last:SYNC.last,err:''}:{state:'fehler',last:SYNC.last,err:e.message||String(e)}}finally{syncing=false;setSync()}}
+function setSync(){const el=$('#sync');if(!el)return;const s=SYNC.state;el.className='sync '+s;
+el.textContent=!CFG.file?'Nur auf diesem Gerät':s==='sync'?'Synchronisiere …':s==='ok'?'Gespeichert in Drive':s==='offline'?'Offline – wird später synchronisiert':s==='fehler'?'Sync-Fehler – antippen':s==='verbinde'?'Verbinde …':s==='login'?'Antippen zum Synchronisieren':'Drive';el.title=SYNC.err||''}
+
+/* ===== Erfassen (Handy) ===== */
+function vErfassen(){const recent=S.tx.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).slice(0,5);const d=new Date().toISOString().slice(0,10);
+const B=bereiche();
+return `<h2>Beleg erfassen</h2>
+<form id="cap" class="cap"><label class="shot" id="shotlbl"><input type="file" id="capfile" accept="image/*,application/pdf" capture="environment" hidden><span id="shottxt">📷 Foto aufnehmen oder Datei wählen</span></label>
+<div id="capprev" class="mut"></div>
+<label>Betrag CHF<input id="capbetrag" type="number" step="0.01" inputmode="decimal" required></label>
+<label>Beschreibung<input id="captext" placeholder="z. B. Schrauben Bauhaus" required></label>
+<div class="grid2c"><label>Datum<input id="capdatum" type="date" value="${d}"></label><label>Firma<input id="capfirma"></label></div>
+<div><div class="lbl">Bereich</div><div class="chips" id="capber">${B.map((b,i)=>`<button type="button" class="chip ${b==='Haus'?'on':''}" data-v="${esc(b)}">${esc(b)}</button>`).join('')}</div></div>
+<label>Kategorie<select id="capkat">${KAT.map(k=>`<option ${k==='Unterhalt'?'selected':''}>${esc(k)}</option>`).join('')}</select></label>
+<label>Hausprojekt<select id="capproj"><option value=""></option>${S.proj.filter(p=>!['Erledigt','Verworfen'].includes(p.status)).map(p=>`<option value="${esc(p._id)}">${esc(p.name)}</option>`).join('')}</select></label>
+<button type="submit" class="big">Speichern</button></form>
+<h3>Zuletzt erfasst</h3>${recent.length?`<table class="stack"><thead><tr><th>Datum</th><th>Beschreibung</th><th class="n">CHF</th></tr></thead><tbody>${recent.map(t=>`<tr class="click" data-tx="${esc(t._id)}"><td>${dt(t.datum)}</td><td>${esc(t.text)}<div class="mut">${esc(t.bereich)} · ${esc(t.kategorie)}${t.belege?.length?' · Beleg':''}</div></td><td class="n">${chf(t.betrag)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Noch nichts erfasst.</div>'}`}
+let CAPFILE=null;
+function bindErfassen(){const f=$('#cap');if(!f)return;const KDEF={Haus:'Unterhalt',Haushalt:'Lebenshaltung'};
+f.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{f.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');$('#capkat').value=KDEF[c.dataset.v]||($('#capkat').value)});
+$('#capfile').onchange=e=>{CAPFILE=e.target.files[0]||null;$('#shottxt').textContent=CAPFILE?'✓ '+CAPFILE.name:'📷 Foto aufnehmen oder Datei wählen';$('#capprev').innerHTML=CAPFILE&&CAPFILE.type.startsWith('image/')?`<img src="${URL.createObjectURL(CAPFILE)}" style="max-width:100%;max-height:220px;border-radius:8px">`:''};
+f.onsubmit=async e=>{e.preventDefault();const datum=$('#capdatum').value,ber=f.querySelector('.chip.on')?.dataset.v||'Haus';
+const belege=CAPFILE?[await addBeleg(new File([CAPFILE],`${datum}_${$('#captext').value.trim().slice(0,40)}.${(CAPFILE.name.split('.').pop()||'jpg')}`,{type:CAPFILE.type}))]:[];
+await put('tx',null,{datum,text:$('#captext').value.trim(),betrag:+$('#capbetrag').value,bereich:ber,kategorie:$('#capkat').value,status:'Bezahlt',steuerjahr:+datum.slice(0,4),firma:$('#capfirma').value.trim(),konto:'',projekt:$('#capproj').value,beleg:'',belege,notiz:''});
+CAPFILE=null;msg('Gespeichert');render();window.scrollTo(0,0)}}
+
+/* ===== Einstellungen ===== */
+function vEinst(){const P=S.set.personen||[],K=S.set.kinder||[];
+return `<h2>Einstellungen</h2>
+<h3>Google Drive</h3><div class="card">
+<p><b>Status:</b> <span id="sync2">${!CFG.file?'Nicht verbunden – Daten nur auf diesem Gerät':SYNC.state==='fehler'?'Fehler: '+esc(SYNC.err):'Verbunden'+(SYNC.last?' · zuletzt '+SYNC.last.toLocaleTimeString('de-CH'):'')}</span></p>
+${CFG.clientId?'':`<label>Google Client-ID<input id="cid" placeholder="…apps.googleusercontent.com"></label><button class="ghost" id="cidsave" style="margin:8px 0">Client-ID speichern</button>`}
+<div class="row">${CFG.file?`<button id="syncnow">Jetzt synchronisieren</button><button class="ghost" id="drvopen">Ordner in Drive öffnen</button><button class="ghost" id="drvoff">Verbindung trennen</button>`:`<button id="drvnew">Neuen Ordner anlegen (erste Person)</button><button class="ghost" id="drvjoin">Geteilten Ordner verbinden (zweite Person)</button>`}</div>
+<p class="mut">Ablauf: Lukas legt den Ordner an und teilt «Familienfinanzen Gerber» in Google Drive mit Annika (Bearbeiter). Annika tippt dann «Geteilten Ordner verbinden». Jeden Tag wird automatisch eine Kopie in «Backups» gespeichert.</p></div>
+<h3>Personen</h3><div class="card"><label>Erwachsene (kommagetrennt)<input id="pers" value="${esc(P.join(', '))}"></label>
+<div class="lbl" style="margin-top:10px">Kinder</div>${K.length?`<table>${K.map((k,i)=>`<tr><td>${esc(k.name)}</td><td>${k.geburt?dt(k.geburt):'<span class="mut">Geburt offen</span>'}</td><td><button class="link" data-kidx="${i}">bearbeiten</button></td></tr>`).join('')}</table>`:'<p class="mut">Noch keine Kinder erfasst.</p>'}
+<div class="row" style="margin-top:8px"><button class="ghost" id="newkid">Kind hinzufügen</button><button id="perssave">Personen speichern</button></div></div>
+<h3>Daten</h3><div class="card row"><button class="ghost" id="bak">Backup herunterladen</button><button class="ghost" id="rest">Backup / Daten importieren</button></div>
+<p class="mut">App-Version 1.0 · Daten: lokal auf diesem Gerät${CFG.file?' und in Google Drive':''}.</p>`}
+function kidForm(i){const K=[...(S.set.kinder||[])],k=i!=null?K[i]:{};form(i!=null?'Kind bearbeiten':'Kind hinzufügen',[['name','Name (oder Arbeitstitel)'],['geburt','Geburtsdatum','date']],k,
+o=>{if(i!=null)K[i]={...k,...o};else K.push(o);return setDoc('settings',{...S.set,kinder:K})},i!=null&&(()=>{K.splice(i,1);return setDoc('settings',{...S.set,kinder:K})}))}
+function bindEinst(){const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};const run=f=>async()=>{try{await f()}catch(e){SYNC={state:'fehler',err:e.message};setSync();msg(e.message);render()}};
+on('#cidsave',()=>{const v=$('#cid').value.trim();if(v){localStorage.setItem('ff_client',v);msg('Gespeichert');render()}});
+on('#drvnew',run(driveSetupNew));on('#drvjoin',run(driveConnectExisting));on('#syncnow',run(()=>sync(true)));
+on('#drvopen',()=>window.open('https://drive.google.com/drive/folders/'+CFG.folder,'_blank'));
+on('#drvoff',()=>{['folder','file','belege','backups'].forEach(k=>setCfg(k,''));localStorage.removeItem('ff_signed');TOKEN=null;render()});
+on('#newkid',()=>kidForm());$('#main').querySelectorAll('[data-kidx]').forEach(b=>b.onclick=()=>kidForm(+b.dataset.kidx));
+on('#perssave',()=>setDoc('settings',{...S.set,personen:$('#pers').value.split(',').map(s=>s.trim()).filter(Boolean)}).then(()=>msg('Gespeichert')))}
+
+/* ===== Start ===== */
+(async()=>{const st=$('#status');
+try{const D=await kv('kv','data');loadSnap(D);if(!D&&!location.hash)location.hash='einstellungen';for(const k of await kvKeys('files')){const f=await kv('files',k);if(f)LOCALURL[k]=URL.createObjectURL(f.blob)}}catch(e){st.textContent='Lokaler Speicher nicht verfügbar: '+e.message;return}
+S.ok=true;route();setSync();
+const tryAuto=()=>{if(CFG.file&&gisReady())sync(false)};
+window.addEventListener('load',()=>setTimeout(tryAuto,800));addEventListener('online',()=>sync(false));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync(false)});
+$('#sync').onclick=()=>sync(true);
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+
+}
+</script>
+</body>
+</html>
