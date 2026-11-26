@@ -76,6 +76,11 @@ pre,.scroll{overflow-x:auto}
 .sync{font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap;color:var(--mut)}
 .sync.ok{color:var(--pos)}.sync.fehler{color:var(--neg);border-color:var(--neg)}.sync.login{color:var(--acc);border-color:var(--acc)}
 #bnav{display:none}
+.mbars{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;height:170px;align-items:end}.mb{display:flex;flex-direction:column;align-items:center;height:100%}.mbp{flex:1;width:100%;display:flex;gap:2px;align-items:flex-end;justify-content:center}.mbp i{display:block;width:42%;border-radius:4px 4px 0 0;min-height:1px}.mb span{font-size:11px;color:var(--mut);margin-top:4px}
+i.e{background:var(--mut)}i.a{background:var(--acc)}.legend{display:flex;gap:16px;font-size:13px;margin-top:8px;flex-wrap:wrap}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.bar1{position:relative;height:10px;background:var(--soft);border-radius:4px}.bar1 s{position:absolute;top:-3px;width:2px;height:16px;background:var(--ink)}.krow{padding:10px 0;border-bottom:1px solid var(--line)}.krow:last-child{border:0}.kt{display:flex;justify-content:space-between;margin-bottom:5px}.ks{font-size:13px;margin-top:4px}.neg{color:var(--neg)}.bar1 i{display:block;height:100%;background:var(--acc);border-radius:4px}
+svg.prj{width:100%;max-width:760px;height:auto;font-size:11px;display:block}svg.prj text{fill:var(--mut)}svg.prj .grid{stroke:var(--line)}svg.prj .zero{stroke:var(--mut)}svg.prj .la{fill:none;stroke:var(--acc);stroke-width:2.5}svg.prj .lb{fill:none;stroke:var(--mut);stroke-width:2.5;stroke-dasharray:6 4}svg.prj circle{stroke:var(--bg);stroke-width:2}svg.prj .da{fill:var(--acc)}svg.prj .db{fill:var(--mut)}
+.legend i.la{background:var(--acc)}.legend i.lb{background:var(--mut)}.tag.neg{color:var(--neg)}td.neg{color:var(--neg)}
 .shot.sm{min-height:72px;font-size:15px}.thumbs{display:flex;flex-wrap:wrap;gap:8px}.th{position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700}.th img{width:100%;height:100%;object-fit:cover}.th button{position:absolute;top:2px;right:2px;min-height:0;width:24px;height:24px;padding:0;border-radius:12px;background:#000a;color:#fff;font-size:15px;line-height:24px}
 .chk{display:flex;gap:10px;align-items:center}.chk input{width:auto;min-height:auto}details.man{margin-top:18px}details.man>summary{cursor:pointer;font-weight:700;padding:10px 0}
 .btnl{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--ink);text-decoration:none;font-weight:600}
@@ -106,7 +111,7 @@ details.hb{margin-top:10px}details.hb>summary{cursor:pointer;padding:4px 0}.hbt 
 <div id="msg" role="status"></div>
 <script>
 {
-const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['archiv','Archiv'],['handbuch','Handbuch'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['anteile','Finanzierung Haus'],['einstellungen','Einstellungen']];
+const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['ausgaben','Ausgaben'],['projektion','Projektion'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['archiv','Archiv'],['handbuch','Handbuch'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['anteile','Finanzierung Haus'],['einstellungen','Einstellungen']];
 const MAX3A={2020:6826,2021:6883,2022:6883,2023:7056,2024:7056,2025:7258,2026:7258};
 const PSTAT=['Idee','Offerten einholen','Geplant','In Arbeit','Erledigt','Verworfen'];
 const PSTEU=['Unterhalt (abziehbar)','Wertvermehrend (Anlagekosten)','Gemischt','Zu klären','Nicht abziehbar'];
@@ -115,10 +120,9 @@ const KAT=['Anlagekosten','Wertvermehrend','Unterhalt','Hypothekarzins','Amortis
 const STATUS=['Bezahlt','Offen','Geplant','Gestundet','Zu prüfen'];
 const KTYP=['Privatkonto','Sparkonto','Liegenschaftskonto','Depot','Anteilschein','Säule 3a','Pensionskasse','Hypothek'];
 const VTYP=['Gebäude','Hausrat/Haftpflicht','Rechtsschutz','Krankenkasse','Leben/Risiko','Auto','Sonstige'];
-const S={tx:[],acc:[],ins:[],proj:[],bud:[],wis:[],tomb:{},haus:{},set:{personen:['Lukas','Annika']},ok:false};
+const S={tx:[],acc:[],ins:[],proj:[],bud:[],wis:[],ums:[],ere:[],tomb:{},haus:{},set:{personen:['Lukas','Annika']},ok:false};
 let view='uebersicht',dlgSave=null;
-let Y=new Date().getFullYear()-1;
-try{Y=+(localStorage.getItem('fy'))||Y}catch(e){}
+let Y=new Date().getFullYear();
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const chf=v=>(v==null||v===''||isNaN(v))?'–':Number(v).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -141,7 +145,7 @@ function years(){const ys=new Set([new Date().getFullYear(),Y]);S.tx.forEach(t=>
 const lo=Math.min(...ys),hi=Math.max(...ys,new Date().getFullYear()+1);for(let y=lo;y<=hi;y++)ys.add(y);$('#year').innerHTML=[...ys].sort((a,b)=>b-a).map(y=>`<option ${y===Y?'selected':''}>${y}</option>`).join('');}
 
 function render(){nav();years();const m=$('#main');if(!S.ok){return}
-m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,anteile:vAnteile,einstellungen:vEinst,archiv:vArchiv,handbuch:vHandbuch}[view]||vUeb)();bind();setSync();}
+m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,anteile:vAnteile,einstellungen:vEinst,archiv:vArchiv,handbuch:vHandbuch,ausgaben:vAusgaben,projektion:vProjektion}[view]||vUeb)();bind();setSync();}
 
 function tax(y){const T=txY(y);
 const guth=S.acc.filter(a=>!['Hypothek','Säule 3a','Pensionskasse'].includes(a.typ)&&saldo(a,y)!=null);
@@ -316,7 +320,7 @@ ${insJ?`<tr><td>Versicherungen (aus Liste Versicherungen)</td><td>Versicherung</
 <h3>Budget und effektiv bezahlt ${Y}</h3><table class="stack"><thead><tr><th>Kategorie</th><th class="n">Budget Jahr</th><th class="n">Bezahlt ${Y}</th></tr></thead><tbody>${Object.entries(byK).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${chf(v)}</td><td class="n">${chf(ist(k))}</td></tr>`).join('')}</tbody></table>
 <p class="mut">«Bezahlt» zählt nur erfasste Buchungen. Mit dem CSV-Import unter Buchungen wird der Vergleich vollständiger.</p>`}
 function budForm(b){b=b||{intervall:'monatlich',kategorie:'Lebenshaltung'};
-form(b._id?'Budgetposten bearbeiten':'Neuer Budgetposten',[['name','Posten'],['betrag','Betrag CHF','number'],['intervall','Intervall','select',Object.keys(IV)],['kategorie','Kategorie','select',KAT],['konto','Ab Konto','select',[['',''],...S.acc.map(a=>[a._id,a.name])]],['notiz','Notiz','area']],b,
+form(b._id?'Budgetposten bearbeiten':'Neuer Budgetposten',[['name','Posten'],['betrag','Betrag CHF','number'],['intervall','Intervall','select',Object.keys(IV)],['kategorie','Kategorie (Steuern)','select',KAT],['bk','Budget-Kategorie','select',['',...BK]],['konto','Ab Konto','select',[['',''],...S.acc.map(a=>[a._id,a.name])]],['notiz','Notiz','area']],b,
 o=>put('budget',b._id,{...b,...o}),b._id&&(()=>delDoc('budget',b._id)))}
 
 /* Kalender (.ics) */
@@ -430,7 +434,7 @@ m.querySelectorAll('[data-delfr]').forEach(b=>b.onclick=()=>{const k=b.dataset.d
 const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
 on('#newtx',()=>txForm());on('#newacc',()=>accForm());on('#newins',()=>insForm());on('#edhaus',hausForm);on('#newfr',frForm);
 on('#copytax',async()=>{try{await navigator.clipboard.writeText(taxText());msg('In die Zwischenablage kopiert')}catch(e){msg('Kopieren nicht möglich')}});
-on('#csv',exportCsv);bindErfassen();bindArchiv();bindHandbuch();on('#newfin',()=>finForm());on('#newver',()=>verForm());m.querySelectorAll('[data-ver]').forEach(r=>r.onclick=()=>verForm(+r.dataset.ver));on('#finprint',()=>window.print());m.querySelectorAll('[data-fin]').forEach(r=>r.onclick=()=>finForm(+r.dataset.fin));if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
+on('#csv',exportCsv);bindErfassen();bindArchiv();bindHandbuch();bindAusgaben();bindProjektion();on('#newfin',()=>finForm());on('#newver',()=>verForm());m.querySelectorAll('[data-ver]').forEach(r=>r.onclick=()=>verForm(+r.dataset.ver));on('#finprint',()=>window.print());m.querySelectorAll('[data-fin]').forEach(r=>r.onclick=()=>finForm(+r.dataset.fin));if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
 m.querySelectorAll('[data-proj]').forEach(r=>r.onclick=()=>projForm(S.proj.find(x=>x._id===r.dataset.proj)));
 m.querySelectorAll('[data-bud]').forEach(r=>r.onclick=()=>budForm(S.bud.find(x=>x._id===r.dataset.bud)));
 m.querySelectorAll('[data-ics]').forEach(b=>b.onclick=()=>ics((S.haus.fristen||[]).filter(f=>f.datum+'|'+f.text===b.dataset.ics)));
@@ -446,7 +450,7 @@ function route(){const h=location.hash.slice(1);view=VIEWS.some(v=>v[0]===h)?h:'
 window.addEventListener('hashchange',route);nav();
 
 /* ===== Lokale Datenhaltung (IndexedDB) ===== */
-const COLS={tx:'tx',accounts:'acc',insurances:'ins',projekte:'proj',budget:'bud',wissen:'wis'};
+const COLS={tx:'tx',accounts:'acc',insurances:'ins',projekte:'proj',budget:'bud',wissen:'wis',umsaetze:'ums',ereignisse:'ere'};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 let IDB=null;
 function idb(){return IDB||(IDB=new Promise((res,rej)=>{const r=indexedDB.open('familienfinanzen',1);r.onupgradeneeded=()=>{r.result.createObjectStore('kv');r.result.createObjectStore('files')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
@@ -631,6 +635,110 @@ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{ty
 let hbT=null;function bindHandbuch(){if(view!=='handbuch')return;const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};on('#hbexp',hbExport);on('#hbnew',()=>hbForm());
 $('#main').querySelectorAll('[data-hb]').forEach(b=>b.onclick=()=>hbForm(S.wis.find(x=>x._id===b.dataset.hb)));
 const i=$('#hbq');if(i)i.oninput=()=>{clearTimeout(hbT);hbT=setTimeout(()=>{HBQ=i.value;render();const j=$('#hbq');if(j){j.focus();j.setSelectionRange(j.value.length,j.value.length)}},300)}}
+
+/* ===== Ausgaben (Kontoumsätze, Budget-Kategorien) ===== */
+const BK=['Wohnen & Haus','Energie','Lebensmittel','Auto & Mobilität','Versicherungen & Krankenkasse','Gesundheit','Freizeit & Hobby','Ferien','Kind','Steuern','Diverses'];
+const BKX=['Einkommen','Sonstige Einnahmen','Sparen & Anlagen','Umbuchung'];
+const DEF_BREGELN=`lohn|salär|spital emmental|insel gruppe|spitäler fmi|kinderzulage|familienzulage|mutterschaft = Einkommen
+lukas gerber|annika|lukas und annika|neon switzerland ag|twint = Umbuchung
+strategy|etf|glb x|first solar|shell rg|sandisk|taiwan semi|swissborg|blocknodes|goldhaus|viac|finpension|frankly = Sparen & Anlagen
+abendrot|hypothek|zinsabschluss|amortisation|gebäudeversicherung|gemeindeverwaltung|kaminfeger|bauhaus|jumbo|hornbach|landi|lerchholz|jenni|brütsch = Wohnen & Haus
+bkw|localnet|agrola|migrol|socar|tamoil|eni|avia = Energie
+coop|migros|lidl|aldi|denner|volg|spar|chrut|bäckerei|beck|jakob-markt|confiserie = Lebensmittel
+sbb|bls|parkingpay|parking|ecarup|autoverlad|garage|tcs = Auto & Mobilität
+smile|helvetia|visana|ökk|css|helsana|swica|sanitas|axa|mobiliar|rega|paraplegiker|shv = Versicherungen & Krankenkasse
+apotheke|dr.med|zahnarzt|praxis|spital|arzt = Gesundheit
+steuerverwaltung|serafe = Steuern
+hotel|camping|booking|airbnb|channel tunnel|dfds|calmac|ferry = Ferien
+spotify|starlink|google|openai|chatgpt|claude|digital republic|wingo|swisscom|sac|bergbahn|skilift|digitec|galaxus|bike|bergfreunde = Freizeit & Hobby
+compassion|spende = Diverses`;
+const parseBR=t=>String(t||'').split('\n').map(l=>l.split('=')).filter(p=>p.length>1&&p[1].trim()).map(([m,k])=>({m:m.split('|').map(x=>x.trim().toLowerCase()).filter(Boolean),k:k.trim()}));
+let BRC=null,BRT=null;const bRules=()=>{const t=S.set.bregeln??DEF_BREGELN;if(t!==BRT){BRT=t;BRC=parseBR(t)}return BRC};
+const bkOf=u=>{if(u.bk)return u.bk;const lt=(u.text||'').toLowerCase();const r=bRules().find(r=>r.m.some(m=>lt.includes(m)));return r?r.k:(u.betrag>0?'Sonstige Einnahmen':'Nicht zugeordnet')};
+const uPers=u=>{const a=S.acc.find(x=>x._id===u.konto);return a?(a.zahltFuer||a.inhaber||'?'):'?'};
+const mk=d=>String(d).slice(0,7),mName=m=>['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][+m.slice(5,7)-1]+' '+m.slice(2,4);
+let AUS={per:'12',kat:''};
+function ausRange(){const ms=[...new Set(S.ums.map(u=>mk(u.datum)))].sort();if(!ms.length)return[];
+if(AUS.per==='12'){const last=ms[ms.length-1];const out=[];let [y,m]=last.split('-').map(Number);for(let i=0;i<12;i++){out.unshift(`${y}-${String(m).padStart(2,'0')}`);if(--m<1){m=12;y--}}return out}
+return Array.from({length:12},(_,i)=>`${Y}-${String(i+1).padStart(2,'0')}`)}
+function ausCalc(ms){const set=new Set(ms),U=S.ums.filter(u=>set.has(mk(u.datum)));const withData=new Set(U.map(u=>mk(u.datum)));const n=Math.max(1,ms.filter(m=>withData.has(m)).length);
+const by={},pm={},pers={};let ein=0,aus=0,spar=0;
+for(const u of U){const k=bkOf(u),b=+u.betrag||0;if(k==='Umbuchung')continue;if(k==='Einkommen'||k==='Sonstige Einnahmen'){ein+=b;continue}if(k==='Sparen & Anlagen'){spar-=b;continue}
+by[k]=(by[k]||0)-b;aus-=b;const m=mk(u.datum);pm[m]=(pm[m]||0)-b;const p=uPers(u);pers[p]=(pers[p]||0)-b}
+const pmE={};for(const u of U)if(['Einkommen','Sonstige Einnahmen'].includes(bkOf(u))){const m=mk(u.datum);pmE[m]=(pmE[m]||0)+(+u.betrag||0)}
+return{U,n,by,pm,pmE,pers,ein,aus,spar,months:ms,withData}}
+function vAusgaben(){const ms=ausRange();
+const head=`<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><h2>Ausgaben</h2><div class="row" style="gap:6px"><button class="${AUS.per==='12'?'':'ghost'}" data-per="12">Letzte 12 Monate</button><button class="${AUS.per==='y'?'':'ghost'}" data-per="y">Jahr ${Y}</button></div></div>`;
+if(!S.ums.length)return head+`<div class="card"><p><b>Noch keine Kontoumsätze.</b></p><p class="mut">Kontoauszüge (neon, Zak, später Annikas Konten) in «Eingang» legen – Claude importiert sie bei «Eingang verarbeiten». Belege braucht es dafür nicht.</p><p class="mut">Konten mit Umsätzen: noch keine.</p></div>${bregelnBox()}`;
+const c=ausCalc(ms),n=c.n,bud={};S.bud.forEach(b=>{if(b.bk)bud[b.bk]=(bud[b.bk]||0)+(+b.betrag||0)*(IV[b.intervall]||1)/12});
+const rows=[...BK,'Nicht zugeordnet'].map(k=>[k,c.by[k]||0]).filter(r=>r[1]||bud[r[0]]).sort((a,b)=>b[1]-a[1]);const mx=Math.max(1,...rows.map(r=>r[1]));
+const konten=[...new Set(c.U.map(u=>u.konto))].map(accName).filter(Boolean);
+const pmMax=Math.max(1,...ms.map(m=>Math.max(c.pm[m]||0,c.pmE[m]||0)));
+const chart=`<div class="mbars">${ms.map(m=>`<div class="mb" title="${mName(m)}: Einnahmen ${chf0(c.pmE[m])}, Ausgaben ${chf0(c.pm[m])}"><div class="mbp"><i class="e" style="height:${(c.pmE[m]||0)/pmMax*100}%"></i><i class="a" style="height:${(c.pm[m]||0)/pmMax*100}%"></i></div><span>${mName(m).slice(0,3)}</span></div>`).join('')}</div><div class="legend"><span><i class="e"></i>Einnahmen</span><span><i class="a"></i>Ausgaben</span></div>`;
+const det=AUS.kat?c.U.filter(u=>bkOf(u)===AUS.kat).sort((a,b)=>a.datum<b.datum?1:-1):[];
+return head+`<p class="mut">Konten: ${esc(konten.join(', ')||'–')} · ${c.withData.size} von 12 Monaten mit Daten.${(S.set.personen||[]).length>1&&Object.keys(c.pers).length<2?' Annikas Konten fehlen noch – Werte sind unvollständig.':''}</p>
+<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:12px 0"><div class="kpi"><span class="mut">Einnahmen / Monat</span><b>${chf0(c.ein/n)}</b></div><div class="kpi"><span class="mut">Ausgaben / Monat</span><b>${chf0(c.aus/n)}</b></div><div class="kpi"><span class="mut">Gespart / Monat</span><b>${chf0((c.ein-c.aus)/n)}</b></div><div class="kpi"><span class="mut">davon angelegt / Monat</span><b>${chf0(c.spar/n)}</b></div></div>
+<h3>Pro Monat</h3><div class="card">${chart}</div>
+<h3>Nach Kategorie <span class="mut" style="font-weight:400">(Ø pro Monat · Strich = Budget)</span></h3>
+<div class="card klist">${rows.map(([k,v])=>`<div class="krow click" data-bkat="${esc(k)}"><div class="kt"><span>${esc(k)}</span><b>${chf0(v/n)}</b></div><div class="bar1"><i style="width:${v/mx*100}%"></i>${bud[k]?`<s style="left:${Math.min(100,bud[k]*n/mx*100)}%" title="Budget"></s>`:''}</div><div class="mut ks">Total ${chf0(v)}${bud[k]?` · Budget ${chf0(bud[k])} / Mt${v/n>bud[k]*1.05?' · <span class="neg">über Budget</span>':''}`:''}</div></div>`).join('')}</div>
+${Object.keys(c.pers).length?`<h3>Bezahlt von</h3><div class="card">${Object.entries(c.pers).sort((a,b)=>b[1]-a[1]).map(([p,v])=>`<div class="row" style="justify-content:space-between"><span>${esc(p)}</span><b>${chf0(v/n)} / Monat</b></div>`).join('')}</div>`:''}
+${AUS.kat?`<h3>${esc(AUS.kat)} <button class="ghost" data-bkat="">schliessen</button></h3><table class="stack"><tbody>${det.slice(0,300).map(u=>`<tr class="click" data-ums="${esc(u._id)}"><td>${dt(u.datum)}</td><td>${esc(u.text)}<div class="mut">${esc(accName(u.konto))}${u.bk?' · manuell zugeordnet':''}</div></td><td class="n">${chf(u.betrag)}</td></tr>`).join('')}</tbody></table>`:'<p class="mut">Kategorie antippen zeigt die einzelnen Umsätze.</p>'}
+${bregelnBox()}`}
+const bregelnBox=()=>`<details class="card" style="margin-top:16px"><summary><b>Zuordnungsregeln</b> <span class="mut">(Suchtext | Suchtext = Kategorie)</span></summary><p class="mut">Erste passende Regel gilt. Kategorien: ${[...BK,...BKX].join(', ')}.</p><textarea id="bregeln" rows="14" style="font-size:13px">${esc(S.set.bregeln??DEF_BREGELN)}</textarea><div class="row" style="justify-content:flex-end;gap:8px"><button class="ghost" id="bregdef">Standard</button><button id="bregsave">Regeln speichern</button></div></details>`;
+function umsForm(u){form('Umsatz zuordnen',[['bk','Kategorie (leer = nach Regel: '+bkOf({...u,bk:''})+')','select',['',...BK,...BKX]],['notiz','Notiz','area']],u,o=>put('umsaetze',u._id,{...u,...o}),null)}
+function bindAusgaben(){if(view!=='ausgaben')return;const m=$('#main');
+m.querySelectorAll('[data-per]').forEach(b=>b.onclick=()=>{AUS.per=b.dataset.per;render()});
+m.querySelectorAll('[data-bkat]').forEach(r=>r.onclick=()=>{AUS.kat=AUS.kat===r.dataset.bkat?'':r.dataset.bkat;render()});
+m.querySelectorAll('[data-ums]').forEach(r=>r.onclick=()=>umsForm(S.ums.find(x=>x._id===r.dataset.ums)));
+const sv=$('#bregsave');if(sv)sv.onclick=()=>setDoc('settings',{...S.set,bregeln:$('#bregeln').value}).then(()=>msg('Regeln gespeichert'));
+const df=$('#bregdef');if(df)df.onclick=()=>{$('#bregeln').value=DEF_BREGELN}}
+
+/* ===== Projektion ===== */
+let PRJ={jahre:10};
+const ym=d=>{const[y,m]=String(d).split('-').map(Number);return y*12+(m-1)},ymS=i=>`${Math.floor(i/12)}-${String(i%12+1).padStart(2,'0')}`;
+function prjBase(){const P=S.set.proj||{};const ms=(()=>{const a=AUS.per;AUS.per='12';const r=ausRange();AUS.per=a;return r})();const c=ms.length?ausCalc(ms):null;
+const ein=P.ein!=null&&P.ein!==''?+P.ein:c?c.ein/c.n:0,aus=P.aus!=null&&P.aus!==''?+P.aus:c?c.aus/c.n:0;
+const LIQ=['Privatkonto','Sparkonto','Liegenschaftskonto','Depot'];const ys=S.acc.flatMap(a=>Object.keys(a.saldi||{}).map(Number));const ly=ys.length?Math.max(...ys):Y;
+const start=P.start!=null&&P.start!==''?+P.start:sum(S.acc.filter(a=>LIQ.includes(a.typ)),a=>saldo(a,ly)||0);
+return{ein,aus,start,ly,fromData:!!c,auto:{ein:c?c.ein/c.n:null,aus:c?c.aus/c.n:null}}}
+function prjRun(base,variant,months){const now=new Date(),i0=now.getFullYear()*12+now.getMonth();let v=base.start;const pts=[[i0,v]];
+const E=S.ere.filter(e=>!e.variante||e.variante==='beide'||e.variante===variant);
+for(let i=i0+1;i<=i0+months;i++){let d=base.ein-base.aus;
+for(const e of E){const a=+e.betrag||0,s=e.von?ym(e.von):i0,t=e.bis?ym(e.bis):Infinity,sg=e.art==='Ausgabe'?-1:1;
+if(e.art==='Einmalig'){if(i===s)d+=a}else if(i>=s&&i<=t)d+=sg*a}
+v+=d;pts.push([i,v])}return pts}
+function prjChart(A,B){const W=400,H=250,pl=44,pr=8,pt=10,pb=24,all=[...A,...(B||[])],x0=A[0][0],x1=A[A.length-1][0];
+let lo=Math.min(0,...all.map(p=>p[1])),hi=Math.max(1,...all.map(p=>p[1]));const pad=(hi-lo)*0.08;hi+=pad;if(lo<0)lo-=pad;
+const X=i=>pl+(i-x0)/(x1-x0||1)*(W-pl-pr),Yp=v=>pt+(hi-v)/(hi-lo||1)*(H-pt-pb);
+const raw=(hi-lo)/5||1,p10=10**Math.floor(Math.log10(raw)),step=[1,2,2.5,5,10].map(f=>f*p10).find(x=>x>=raw),gs=[];for(let g=Math.ceil(lo/step)*step;g<=hi+1e-9;g+=step)gs.push(g);const gg=gs;
+const path=P=>P.map((p,k)=>(k?'L':'M')+X(p[0]).toFixed(1)+' '+Yp(p[1]).toFixed(1)).join('');
+const yrs=[];const ys=Math.ceil((x1-x0)/12/6);for(let i=x0;i<=x1;i++)if(i%12===0&&(Math.floor(i/12)%ys===0))yrs.push(i);
+const dots=(P,cls)=>P.filter(p=>p[0]%12===0||p[0]===x0).map(p=>`<circle class="${cls}" cx="${X(p[0]).toFixed(1)}" cy="${Yp(p[1]).toFixed(1)}" r="3.5"><title>${ymS(p[0])}: CHF ${chf0(p[1])}</title></circle>`).join('');
+return `<svg viewBox="0 0 ${W} ${H}" class="prj" role="img" aria-label="Projektion freie Mittel">
+${gg.map(g=>`<line x1="${pl}" x2="${W-pr}" y1="${Yp(g)}" y2="${Yp(g)}" class="${g===0?'zero':'grid'}"/><text x="${pl-6}" y="${Yp(g)+4}" text-anchor="end">${chf0(g/1000)}k</text>`).join('')}
+${yrs.map(i=>`<text x="${X(i)}" y="${H-8}" text-anchor="middle">${Math.floor(i/12)}</text>`).join('')}
+${B?`<path d="${path(B)}" class="lb"/>`:''}<path d="${path(A)}" class="la"/>${B?dots(B,'db'):''}${dots(A,'da')}</svg>`}
+function vProjektion(){const b=prjBase(),M=PRJ.jahre*12,hasB=S.ere.some(e=>e.variante==='B'||e.variante==='A');
+const A=prjRun(b,'A',M),B=hasB?prjRun(b,'B',M):null;const end=A[A.length-1][1],endB=B?B[B.length-1][1]:null;
+const minA=A.reduce((m,p)=>p[1]<m[1]?p:m,A[0]);
+const E=S.ere.slice().sort((a,b)=>(a.von||'')<(b.von||'')?-1:1);
+const yrRows=A.filter(p=>p[0]%12===11||p===A[0]).map(p=>[p,B?B.find(q=>q[0]===p[0]):null]);
+return `<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><h2>Projektion</h2><div class="row" style="gap:6px">${[5,10,15].map(j=>`<button class="${PRJ.jahre===j?'':'ghost'}" data-pj="${j}">${j} Jahre</button>`).join('')}</div></div>
+<p class="mut">Freie Mittel (Privat-, Spar-, Liegenschaftskonten, Depot) ab heute: Basis = Ø Einnahmen minus Ø Ausgaben, plus geplante Ereignisse. Eine Schätzung, keine Prognose.${b.fromData?'':' <b>Noch keine Kontoumsätze – Basis manuell eintragen oder Daten abwarten.</b>'}</p>
+<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:12px 0"><div class="kpi"><span class="mut">Start (31.12.${b.ly})</span><b>${chf0(b.start)}</b></div><div class="kpi"><span class="mut">In ${PRJ.jahre} Jahren${B?' (A)':''}</span><b>${chf0(end)}</b></div>${B?`<div class="kpi"><span class="mut">In ${PRJ.jahre} Jahren (B)</span><b>${chf0(endB)}</b></div>`:''}<div class="kpi"><span class="mut">Tiefster Stand${B?' (A)':''}</span><b>${chf0(minA[1])}</b><span class="mut">${mName(ymS(minA[0]))}</span></div></div>
+<div class="card">${prjChart(A,B)}<div class="legend"><span><i class="la"></i>${B?'Variante A':'Freie Mittel'}</span>${B?'<span><i class="lb"></i>Variante B</span>':''}</div></div>
+<details class="card" style="margin-top:12px"><summary><b>Basis</b> <span class="mut">Einnahmen ${chf0(b.ein)} · Ausgaben ${chf0(b.aus)} · Start ${chf0(b.start)}</span></summary>
+<p class="mut">Leer lassen = automatisch aus den Kontoumsätzen der letzten 12 Monate${b.auto.ein!=null?` (${chf0(b.auto.ein)} / ${chf0(b.auto.aus)})`:''} bzw. aus den Kontosalden.</p>
+<div class="grid2c"><label>Einnahmen / Monat<input id="pein" type="number" value="${esc(S.set.proj?.ein??'')}"></label><label>Ausgaben / Monat<input id="paus" type="number" value="${esc(S.set.proj?.aus??'')}"></label></div><label>Startwert freie Mittel<input id="pstart" type="number" value="${esc(S.set.proj?.start??'')}"></label><div class="row" style="justify-content:flex-end"><button id="psave">Übernehmen</button></div></details>
+<div class="row" style="justify-content:space-between;margin-top:16px"><h3 style="margin:0">Geplante Ereignisse</h3><button id="newere">Ereignis hinzufügen</button></div>
+${E.length?`<table class="stack"><thead><tr><th>Ereignis</th><th>Zeitraum</th><th>Variante</th><th class="n">CHF</th></tr></thead><tbody>${E.map(e=>`<tr class="click" data-ere="${esc(e._id)}"><td>${esc(e.name)}<div class="mut">${esc(e.art||'')}${e.notiz?' · '+esc(e.notiz):''}</div></td><td>${e.von?mName(e.von):'ab jetzt'}${e.art==='Einmalig'?'':e.bis?' – '+mName(e.bis):' – offen'}</td><td>${esc(e.variante&&e.variante!=='beide'?e.variante:'beide')}</td>${(()=>{const v=(e.art==='Ausgabe'?-1:1)*(+e.betrag||0);return `<td class="n ${v<0?'neg':''}">${v<0?'−':'+'}${chf0(Math.abs(v))}${e.art==='Einmalig'?'':' /Mt'}</td>`})()}</tr>`).join('')}</tbody></table>`:`<div class="empty">Noch keine Ereignisse. Beispiele: Mutterschaftsurlaub, Pensum-Reduktion, Kita, Familienzulagen, Sanierung (einmalig), Hypothek-Aufstockung, Wegfall Eigenmietwert 2029.</div>`}
+<details class="card" style="margin-top:12px"><summary><b>Jahreswerte als Tabelle</b></summary><table><thead><tr><th>Ende</th><th class="n">${B?'A':'Freie Mittel'}</th>${B?'<th class="n">B</th>':''}</tr></thead><tbody>${yrRows.map(([p,q])=>`<tr><td>${p===A[0]?'heute':ymS(p[0]).slice(0,4)}</td><td class="n">${chf0(p[1])}</td>${B?`<td class="n">${chf0(q?.[1])}</td>`:''}</tr>`).join('')}</tbody></table></details>`}
+function ereForm(e){e=e||{art:'Ausgabe',variante:'beide'};form(e._id?'Ereignis bearbeiten':'Neues Ereignis',[['name','Bezeichnung (z. B. Kita, Mutterschaft)'],['art','Art','select',[['Ausgabe','Mehrausgabe pro Monat'],['Einnahme','Mehreinnahme pro Monat (negativ = weniger Lohn)'],['Einmalig','Einmaliger Betrag (negativ = Ausgabe)']]],['betrag','Betrag CHF','number'],['von','Ab (Monat)','month'],['bis','Bis (Monat, leer = offen)','month'],['variante','Gilt für','select',[['beide','Beide Varianten'],['A','Nur Variante A'],['B','Nur Variante B']]],['notiz','Notiz','area']],e,o=>put('ereignisse',e._id,{...e,...o}),e._id&&(()=>delDoc('ereignisse',e._id)))}
+function bindProjektion(){if(view!=='projektion')return;const m=$('#main');
+m.querySelectorAll('[data-pj]').forEach(b=>b.onclick=()=>{PRJ.jahre=+b.dataset.pj;render()});
+m.querySelectorAll('[data-ere]').forEach(r=>r.onclick=()=>ereForm(S.ere.find(x=>x._id===r.dataset.ere)));
+const n=$('#newere');if(n)n.onclick=()=>ereForm();
+const sv=$('#psave');if(sv)sv.onclick=()=>{const g=id=>{const v=$(id).value;return v===''?null:+v};setDoc('settings',{...S.set,proj:{ein:g('#pein'),aus:g('#paus'),start:g('#pstart')}})}}
 
 /* ===== Wer zahlt was ===== */
 const payer=t=>{if(t.bezahltVon)return t.bezahltVon;const a=S.acc.find(x=>x._id===t.konto);return a?(a.zahltFuer||a.inhaber||'Unbekannt'):'Unbekannt'};
