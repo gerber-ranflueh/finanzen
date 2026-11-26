@@ -76,6 +76,12 @@ pre,.scroll{overflow-x:auto}
 .sync{font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap;color:var(--mut)}
 .sync.ok{color:var(--pos)}.sync.fehler{color:var(--neg);border-color:var(--neg)}.sync.login{color:var(--acc);border-color:var(--acc)}
 #bnav{display:none}
+.shot.sm{min-height:72px;font-size:15px}.thumbs{display:flex;flex-wrap:wrap;gap:8px}.th{position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700}.th img{width:100%;height:100%;object-fit:cover}.th button{position:absolute;top:2px;right:2px;min-height:0;width:24px;height:24px;padding:0;border-radius:12px;background:#000a;color:#fff;font-size:15px;line-height:24px}
+.chk{display:flex;gap:10px;align-items:center}.chk input{width:auto;min-height:auto}details.man{margin-top:18px}details.man>summary{cursor:pointer;font-weight:700;padding:10px 0}
+.btnl{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--ink);text-decoration:none;font-weight:600}
+.arow{display:block;padding:11px 4px;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}.arow:last-child{border-bottom:0}
+details.hb{margin-top:10px}details.hb>summary{cursor:pointer;padding:4px 0}.hbt h4{margin:14px 0 4px}.hbt h5{margin:10px 0 4px}.hbt ul{margin:4px 0 8px;padding-left:20px}.hbt li.sub{margin-left:18px}.hbt p{margin:6px 0}
+
 .cap{display:grid;gap:12px;max-width:560px}.shot{display:flex;align-items:center;justify-content:center;min-height:110px;border:2px dashed var(--line);border-radius:14px;font-weight:700;font-size:17px;cursor:pointer;background:var(--soft)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.chip{background:var(--bg);color:var(--ink);border:1px solid var(--line);font-weight:600;padding:8px 12px;min-height:40px}.chip.on{background:var(--ink);color:var(--bg)}
 .lbl{font-size:14px;font-weight:600}.big{min-height:54px;font-size:17px}.grid2c{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -100,7 +106,7 @@ pre,.scroll{overflow-x:auto}
 <div id="msg" role="status"></div>
 <script>
 {
-const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['anteile','Finanzierung Haus'],['einstellungen','Einstellungen']];
+const VIEWS=[['uebersicht','Übersicht'],['erfassen','Erfassen'],['buchungen','Buchungen'],['budget','Budget'],['konten','Konten'],['vorsorge','Vorsorge'],['haus','Haus'],['archiv','Archiv'],['handbuch','Handbuch'],['projekte','Projekte'],['steuern','Steuern'],['versicherungen','Versicherungen'],['anteile','Finanzierung Haus'],['einstellungen','Einstellungen']];
 const MAX3A={2020:6826,2021:6883,2022:6883,2023:7056,2024:7056,2025:7258,2026:7258};
 const PSTAT=['Idee','Offerten einholen','Geplant','In Arbeit','Erledigt','Verworfen'];
 const PSTEU=['Unterhalt (abziehbar)','Wertvermehrend (Anlagekosten)','Gemischt','Zu klären','Nicht abziehbar'];
@@ -109,7 +115,7 @@ const KAT=['Anlagekosten','Wertvermehrend','Unterhalt','Hypothekarzins','Amortis
 const STATUS=['Bezahlt','Offen','Geplant','Gestundet','Zu prüfen'];
 const KTYP=['Privatkonto','Sparkonto','Liegenschaftskonto','Depot','Anteilschein','Säule 3a','Pensionskasse','Hypothek'];
 const VTYP=['Gebäude','Hausrat/Haftpflicht','Rechtsschutz','Krankenkasse','Leben/Risiko','Auto','Sonstige'];
-const S={tx:[],acc:[],ins:[],proj:[],bud:[],tomb:{},haus:{},set:{personen:['Lukas','Annika']},ok:false};
+const S={tx:[],acc:[],ins:[],proj:[],bud:[],wis:[],tomb:{},haus:{},set:{personen:['Lukas','Annika']},ok:false};
 let view='uebersicht',dlgSave=null;
 let Y=new Date().getFullYear()-1;
 try{Y=+(localStorage.getItem('fy'))||Y}catch(e){}
@@ -135,7 +141,7 @@ function years(){const ys=new Set([new Date().getFullYear(),Y]);S.tx.forEach(t=>
 const lo=Math.min(...ys),hi=Math.max(...ys,new Date().getFullYear()+1);for(let y=lo;y<=hi;y++)ys.add(y);$('#year').innerHTML=[...ys].sort((a,b)=>b-a).map(y=>`<option ${y===Y?'selected':''}>${y}</option>`).join('');}
 
 function render(){nav();years();const m=$('#main');if(!S.ok){return}
-m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,anteile:vAnteile,einstellungen:vEinst}[view]||vUeb)();bind();setSync();}
+m.innerHTML=({uebersicht:vUeb,erfassen:vErfassen,buchungen:vBuch,budget:vBudget,konten:vKonten,vorsorge:vVorsorge,haus:vHaus,projekte:vProj,steuern:vSteuern,versicherungen:vVers,anteile:vAnteile,einstellungen:vEinst,archiv:vArchiv,handbuch:vHandbuch}[view]||vUeb)();bind();setSync();}
 
 function tax(y){const T=txY(y);
 const guth=S.acc.filter(a=>!['Hypothek','Säule 3a','Pensionskasse'].includes(a.typ)&&saldo(a,y)!=null);
@@ -181,7 +187,7 @@ ${KTYP.filter(k=>g[k]).map(k=>`<h3>${esc(k)}</h3><table class="stack"><thead><tr
 
 function vHaus(){const h=S.haus,t=tax(Y),fr=(h.fristen||[]).slice().sort((a,b)=>a.datum<b.datum?-1:1);
 const rows=[['Adresse',h.adresse],['Grundbuch',h.grundbuch],['Eigentum seit',dt(h.kaufdatum)],['Kaufpreis',h.kaufpreis&&'CHF '+chf(h.kaufpreis)],['Amtlicher Wert',h.amtlicherWert&&'CHF '+chf(h.amtlicherWert)],['Eigenmietwert Kanton / Bund',h.eigenmietwert?'CHF '+chf(h.eigenmietwert)+' / '+(h.eigenmietwertBund?chf(h.eigenmietwertBund):'–'):'noch nicht erfasst'],['Gebäude älter als 10 Jahre',h.ueber10?'Ja':'Nein'],['Rechte und Lasten (Grundbuch)',h.rechte]];
-return `<div class="row" style="justify-content:space-between"><h2>Liegenschaft</h2><button id="edhaus">Bearbeiten</button></div>
+return `<div class="row" style="justify-content:space-between"><h2>Liegenschaft</h2><div class="row" style="gap:8px"><a class="ghost btnl" href="#archiv">📁 Archiv</a><button id="edhaus">Bearbeiten</button></div></div>
 <div class="grid2"><div class="card"><table>${rows.map(([k,v])=>`<tr><td class="mut">${k}</td><td>${esc(v||'–')}</td></tr>`).join('')}</table></div>
 <div class="card"><h3 style="margin-top:0">Hypothek per 31.12.${Y}</h3>${t.hyp.length?`<table>${t.hyp.map(a=>`<tr><td>${esc(a.name)}<div class="mut">${esc(a.notiz||'')}</div></td><td class="n">${chf(saldo(a,Y))}</td></tr>`).join('')}<tr class="sum"><td>Schuldzinsen ${Y}</td><td class="n">${chf(t.zins)}</td></tr></table>`:'<p class="mut">Hypothek unter Konten erfassen (Typ Hypothek).</p>'}</div></div>
 ${anlage()}<div class="row" style="justify-content:space-between"><h3>Fristen</h3><div class="row"><button class="ghost" id="icsall">Alle in Kalender</button><button class="ghost" id="newfr">Frist hinzufügen</button></div></div>
@@ -424,7 +430,7 @@ m.querySelectorAll('[data-delfr]').forEach(b=>b.onclick=()=>{const k=b.dataset.d
 const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
 on('#newtx',()=>txForm());on('#newacc',()=>accForm());on('#newins',()=>insForm());on('#edhaus',hausForm);on('#newfr',frForm);
 on('#copytax',async()=>{try{await navigator.clipboard.writeText(taxText());msg('In die Zwischenablage kopiert')}catch(e){msg('Kopieren nicht möglich')}});
-on('#csv',exportCsv);bindErfassen();on('#newfin',()=>finForm());on('#newver',()=>verForm());m.querySelectorAll('[data-ver]').forEach(r=>r.onclick=()=>verForm(+r.dataset.ver));on('#finprint',()=>window.print());m.querySelectorAll('[data-fin]').forEach(r=>r.onclick=()=>finForm(+r.dataset.fin));if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
+on('#csv',exportCsv);bindErfassen();bindArchiv();bindHandbuch();on('#newfin',()=>finForm());on('#newver',()=>verForm());m.querySelectorAll('[data-ver]').forEach(r=>r.onclick=()=>verForm(+r.dataset.ver));on('#finprint',()=>window.print());m.querySelectorAll('[data-fin]').forEach(r=>r.onclick=()=>finForm(+r.dataset.fin));if(view==='einstellungen')bindEinst();on('#bak',backup);on('#rest',restoreForm);on('#imp',impForm);on('#newproj',()=>projForm());on('#newbud',()=>budForm());on('#icsall',()=>ics(S.haus.fristen||[]));
 m.querySelectorAll('[data-proj]').forEach(r=>r.onclick=()=>projForm(S.proj.find(x=>x._id===r.dataset.proj)));
 m.querySelectorAll('[data-bud]').forEach(r=>r.onclick=()=>budForm(S.bud.find(x=>x._id===r.dataset.bud)));
 m.querySelectorAll('[data-ics]').forEach(b=>b.onclick=()=>ics((S.haus.fristen||[]).filter(f=>f.datum+'|'+f.text===b.dataset.ics)));
@@ -440,7 +446,7 @@ function route(){const h=location.hash.slice(1);view=VIEWS.some(v=>v[0]===h)?h:'
 window.addEventListener('hashchange',route);nav();
 
 /* ===== Lokale Datenhaltung (IndexedDB) ===== */
-const COLS={tx:'tx',accounts:'acc',insurances:'ins',projekte:'proj',budget:'bud'};
+const COLS={tx:'tx',accounts:'acc',insurances:'ins',projekte:'proj',budget:'bud',wissen:'wis'};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 let IDB=null;
 function idb(){return IDB||(IDB=new Promise((res,rej)=>{const r=indexedDB.open('familienfinanzen',1);r.onupgradeneeded=()=>{r.result.createObjectStore('kv');r.result.createObjectStore('files')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
@@ -519,7 +525,7 @@ return[data,n]}
 async function dailyBackup(data){const d=new Date().toISOString().slice(0,10);if(localStorage.getItem('ff_lastbak')===d||!CFG.backups)return;
 const ex=await dFind(`name='daten_${d}.json' and '${CFG.backups}' in parents and trashed=false`);if(!ex.length){const b=await dUpload({name:`daten_${d}.json`,parents:[CFG.backups]},new Blob([JSON.stringify(data)],{type:'application/json'}));await dLock(b.id,'Automatisches Backup – nicht ändern')}localStorage.setItem('ff_lastbak',d)}
 async function sync(interactive){if(syncing||!CFG.file)return;if(!navigator.onLine){SYNC.state='offline';setSync();return}syncing=true;SYNC.state='sync';setSync();
-try{await uploadPending();const meta=await (await gapi(`/files/${CFG.file}?fields=version,modifiedTime&supportsAllDrives=true`,{},interactive)).json();
+try{await uploadPending();await uploadEingang();const meta=await (await gapi(`/files/${CFG.file}?fields=version,modifiedTime&supportsAllDrives=true`,{},interactive)).json();
 const lastV=await kv('kv','remoteVersion'),dirty=await kv('kv','dirty');let data=snapshot();
 if(meta.version!==lastV){const remote=await (await gapi(`/files/${CFG.file}?alt=media&supportsAllDrives=true`)).json();data=mergeData(data,remote);loadSnap(data);await kv('kv','data',data)}
 let nImp=0;try{[data,nImp]=await processImports(data)}catch(e){console.warn(e)}if(nImp){loadSnap(data);await kv('kv','data',data);await kv('kv','dirty',true);msg(nImp+' Import(e) aus Drive übernommen')}
@@ -532,8 +538,17 @@ el.textContent=!CFG.file?'Nur auf diesem Gerät':s==='sync'?'Synchronisiere …'
 /* ===== Erfassen (Handy) ===== */
 function vErfassen(){const recent=S.tx.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).slice(0,5);const d=new Date().toISOString().slice(0,10);
 const B=bereiche();
-return `<h2>Beleg erfassen</h2>
-<form id="cap" class="cap"><label class="shot" id="shotlbl"><input type="file" id="capfile" accept="image/*,application/pdf" capture="environment" hidden><span id="shottxt">📷 Foto aufnehmen oder Datei wählen</span></label>
+return `<h2>Belege senden</h2>
+<div class="cap card" id="quick">
+<p class="mut" style="margin:0">Fotos oder PDFs – auch mehrere auf einmal. Sie landen im Drive-Ordner «Eingang», Claude erfasst den Rest bei «Eingang verarbeiten».</p>
+<div class="grid2c"><label class="shot sm"><input type="file" id="qcam" accept="image/*" capture="environment" hidden>📷 Foto aufnehmen</label><label class="shot sm"><input type="file" id="qpick" accept="image/*,application/pdf" multiple hidden>🗂 Mehrere wählen</label></div>
+<div id="qlist" class="thumbs"></div>
+<label class="chk"><input type="checkbox" id="qone"><span>Alle Fotos gehören zum <b>selben</b> Beleg (mehrere Seiten)</span></label>
+<label>Notiz (optional)<input id="qnote" placeholder="z. B. Heizung, bar bezahlt, gehört Annika"></label>
+<button type="button" id="qsend" class="big" disabled>Senden</button>
+<div id="qstat" class="mut"></div></div>
+<details class="man"><summary>Manuell erfassen (mit Betrag und Kategorie)</summary>
+<form id="cap" class="cap" style="margin-top:12px"><label class="shot" id="shotlbl"><input type="file" id="capfile" accept="image/*,application/pdf" capture="environment" hidden><span id="shottxt">📷 Foto aufnehmen oder Datei wählen</span></label>
 <div id="capprev" class="mut"></div>
 <label>Betrag CHF<input id="capbetrag" type="number" step="0.01" inputmode="decimal" required></label>
 <label>Beschreibung<input id="captext" placeholder="z. B. Schrauben Bauhaus" required></label>
@@ -541,10 +556,32 @@ return `<h2>Beleg erfassen</h2>
 <div><div class="lbl">Bereich</div><div class="chips" id="capber">${B.map((b,i)=>`<button type="button" class="chip ${b==='Haus'?'on':''}" data-v="${esc(b)}">${esc(b)}</button>`).join('')}</div></div>
 <label>Kategorie<select id="capkat">${KAT.map(k=>`<option ${k==='Unterhalt'?'selected':''}>${esc(k)}</option>`).join('')}</select></label>
 <label>Hausprojekt<select id="capproj"><option value=""></option>${S.proj.filter(p=>!['Erledigt','Verworfen'].includes(p.status)).map(p=>`<option value="${esc(p._id)}">${esc(p.name)}</option>`).join('')}</select></label>
-<button type="submit" class="big">Speichern</button></form>
+<button type="submit" class="big">Speichern</button></form></details>
 <h3>Zuletzt erfasst</h3>${recent.length?`<table class="stack"><thead><tr><th>Datum</th><th>Beschreibung</th><th class="n">CHF</th></tr></thead><tbody>${recent.map(t=>`<tr class="click" data-tx="${esc(t._id)}"><td>${dt(t.datum)}</td><td>${esc(t.text)}<div class="mut">${esc(t.bereich)} · ${esc(t.kategorie)}${t.belege?.length?' · Beleg':''}</div></td><td class="n">${chf(t.betrag)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Noch nichts erfasst.</div>'}`}
+
+/* ===== Schnell-Upload in den Eingang ===== */
+let QF=[];
+function qRender(){const L=$('#qlist');if(!L)return;L.innerHTML=QF.map((f,i)=>`<div class="th">${f.type.startsWith('image/')?`<img src="${f._u||(f._u=URL.createObjectURL(f))}">`:`<span>PDF</span>`}<button type="button" data-qdel="${i}" aria-label="Entfernen">×</button></div>`).join('');
+L.querySelectorAll('[data-qdel]').forEach(b=>b.onclick=()=>{QF.splice(+b.dataset.qdel,1);qRender()});
+const n=QF.length;$('#qsend').disabled=!n;$('#qsend').textContent=n?`Senden (${n} ${n===1?'Datei':'Dateien'})`:'Senden';qPend()}
+async function qPend(){const e=$('#qstat');if(!e)return;const k=(await kvKeys('files')).filter(x=>String(x).startsWith('eingang:')).length;
+e.textContent=k?`${k} ${k===1?'Datei wartet':'Dateien warten'} auf den Upload${CFG.file?'':' – Google Drive ist nicht verbunden'}.`:''}
+function bindQuick(){if(!$('#quick'))return;const add=e=>{QF.push(...e.target.files);e.target.value='';qRender()};$('#qcam').onchange=add;$('#qpick').onchange=add;qRender();
+$('#qsend').onclick=async()=>{if(!QF.length)return;const b=$('#qsend');b.disabled=true;b.textContent='Wird vorbereitet …';
+const now=new Date(),p=n=>String(n).padStart(2,'0'),stamp=`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+const one=$('#qone').checked,note=$('#qnote').value.trim(),grp=uid().slice(-4);let i=0;
+for(const f0 of QF){i++;const f=await shrink(f0);const ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+const name=one?`${stamp}_beleg-${grp}_seite${i}von${QF.length}.${ext}`:`${stamp}_beleg-${grp}-${i}.${ext}`;
+await kv('files','eingang:'+uid(),{blob:f,name,type:f.type})}
+if(note)await kv('files','eingang:'+uid(),{blob:new Blob([note+(one?'\n(alle Dateien = ein Beleg)':'')],{type:'text/plain'}),name:`${stamp}_beleg-${grp}_notiz.txt`,type:'text/plain'});
+QF=[];$('#qnote').value='';$('#qone').checked=false;qRender();msg('Gesendet – wird in den Eingang hochgeladen');setTimeout(()=>sync(false),300)}}
+async function uploadEingang(){const keys=(await kvKeys('files')).filter(k=>String(k).startsWith('eingang:'));if(!keys.length)return 0;
+let ein=localStorage.getItem('ff_eingang');if(!ein){ein=await dFolder('Eingang',CFG.folder);localStorage.setItem('ff_eingang',ein)}let n=0;
+for(const key of keys){const f=await kv('files',key);if(!f){continue}await dUpload({name:f.name,parents:[ein]},f.blob);await kv('files',key,null);n++}
+if(n){msg(n+(n===1?' Datei':' Dateien')+' im Eingang – schreib Claude «Eingang verarbeiten»');qPend()}return n}
+
 let CAPFILE=null;
-function bindErfassen(){const f=$('#cap');if(!f)return;const KDEF={Haus:'Unterhalt',Haushalt:'Lebenshaltung'};
+function bindErfassen(){bindQuick();const f=$('#cap');if(!f)return;const KDEF={Haus:'Unterhalt',Haushalt:'Lebenshaltung'};
 f.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{f.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');$('#capkat').value=KDEF[c.dataset.v]||($('#capkat').value)});
 $('#capfile').onchange=e=>{CAPFILE=e.target.files[0]||null;$('#shottxt').textContent=CAPFILE?'✓ '+CAPFILE.name:'📷 Foto aufnehmen oder Datei wählen';$('#capprev').innerHTML=CAPFILE&&CAPFILE.type.startsWith('image/')?`<img src="${URL.createObjectURL(CAPFILE)}" style="max-width:100%;max-height:220px;border-radius:8px">`:''};
 f.onsubmit=async e=>{e.preventDefault();const datum=$('#capdatum').value,ber=f.querySelector('.chip.on')?.dataset.v||'Haus';
@@ -552,6 +589,48 @@ const belege=CAPFILE?[await addBeleg(new File([CAPFILE],`${datum}_${$('#captext'
 await put('tx',null,{datum,text:$('#captext').value.trim(),betrag:+$('#capbetrag').value,bereich:ber,kategorie:$('#capkat').value,status:'Bezahlt',steuerjahr:+datum.slice(0,4),firma:$('#capfirma').value.trim(),konto:'',projekt:$('#capproj').value,beleg:'',belege,notiz:''});
 CAPFILE=null;msg('Gespeichert');render();window.scrollTo(0,0)}}
 
+
+/* ===== Archiv (Google Drive, nur lesen) ===== */
+const ARCH_ROOTS=[['1Oq1m_u6iQAHyGWP9OlS7qnEZ9noV25Uw','Hausarchiv EFH'],['1ekDOhLhaoJoFfV_qv0Tc6Bm8Guy550Ys','Quittungen Belege Renovation']];
+let ARCH={stack:[],items:null,q:'',idx:null};
+function vArchiv(){return `<h2>Archiv</h2><p class="mut">Pläne, Verträge, Rechnungen und Dokumente aus Google Drive. Antippen öffnet die Datei in Drive – hier wird nichts verändert.</p>
+<label>Suchen<input id="arq" placeholder="Dateiname, z. B. Grundbuch, Heizung, 2025" value="${esc(ARCH.q)}"></label>
+<div id="arnav" class="row" style="flex-wrap:wrap;gap:6px;margin:10px 0"></div><div id="arlist" class="card">${CFG.file?'Lade …':'Google Drive ist nicht verbunden (Einstellungen).'}</div>`}
+async function arRoots(){const r=ARCH_ROOTS.map(([id,name])=>({id,name,folder:1}));if(CFG.folder){try{r.push({id:await dFolder('Dokumente',CFG.folder),name:'Dokumente (Familienfinanzen)',folder:1})}catch(_){}}if(CFG.belege)r.push({id:CFG.belege,name:'Belege (App)',folder:1});return r}
+async function arList(id){const out=[];let pt='';do{const r=await (await gapi(`/files?q=${q(`'${id}' in parents and trashed=false`)}&fields=nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink)&orderBy=folder,name&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true${pt?'&pageToken='+pt:''}`)).json();
+out.push(...(r.files||[]).map(f=>({id:f.id,name:f.name,link:f.webViewLink,date:(f.modifiedTime||'').slice(0,10),folder:f.mimeType==='application/vnd.google-apps.folder'})));pt=r.nextPageToken||''}while(pt);return out}
+function arRow(f,path){return f.folder?`<div class="click arow" data-arf="${esc(f.id)}" data-arn="${esc(f.name)}">📁 <b>${esc(f.name)}</b>${path?`<div class="mut">${esc(path)}</div>`:''}</div>`
+:`<a class="arow" href="${esc(f.link)}" target="_blank" rel="noopener">📄 ${esc(f.name)}<div class="mut">${path?esc(path)+' · ':''}${dt(f.date)}</div></a>`}
+async function arShow(){const L=$('#arlist'),N=$('#arnav');if(!L||!CFG.file)return;
+N.innerHTML=`<button class="ghost" data-arh="-1">Archiv</button>`+ARCH.stack.map((s,i)=>`› <button class="ghost" data-arh="${i}">${esc(s.name)}</button>`).join('');
+N.querySelectorAll('[data-arh]').forEach(b=>b.onclick=()=>{ARCH.stack=ARCH.stack.slice(0,+b.dataset.arh+1);arShow()});
+L.textContent='Lade …';try{
+if(ARCH.q){if(!ARCH.idx){L.textContent='Durchsuche Archiv … (einmalig)';const idx=[];const walk=async(id,path,d)=>{if(d>6)return;for(const f of await arList(id)){idx.push({...f,path});if(f.folder)await walk(f.id,path?path+' › '+f.name:f.name,d+1)}};for(const r of await arRoots())await walk(r.id,r.name,0);ARCH.idx=idx}
+const w=ARCH.q.toLowerCase().split(/\s+/).filter(Boolean);const hit=ARCH.idx.filter(f=>!f.folder&&w.every(x=>(f.name+' '+f.path).toLowerCase().includes(x))).slice(0,100);
+L.innerHTML=hit.length?hit.map(f=>arRow(f,f.path)).join(''):'<div class="empty">Nichts gefunden.</div>'}
+else{const items=ARCH.stack.length?await arList(ARCH.stack[ARCH.stack.length-1].id):await arRoots();L.innerHTML=items.length?items.map(f=>arRow(f)).join(''):'<div class="empty">Ordner ist leer.</div>'}
+L.querySelectorAll('[data-arf]').forEach(r=>r.onclick=()=>{ARCH.q='';const qi=$('#arq');if(qi)qi.value='';ARCH.stack.push({id:r.dataset.arf,name:r.dataset.arn});arShow()})}
+catch(e){L.innerHTML=e.message==='LOGIN'?'<button id="arlogin">Bei Google anmelden</button>':'Fehler: '+esc(e.message);const b=$('#arlogin');if(b)b.onclick=async()=>{try{await getToken(true);arShow()}catch(_){}}}}
+let arT=null;function bindArchiv(){if(view!=='archiv')return;const i=$('#arq');if(i)i.oninput=()=>{clearTimeout(arT);arT=setTimeout(()=>{ARCH.q=i.value.trim();arShow()},350)};arShow()}
+
+/* ===== Handbuch (Wissen, Entscheide, Regeln) ===== */
+function mdHtml(t){const lines=esc(t||'').split('\n');let h='',ul=false;const inl=x=>x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[\[(.+?)\]\]/g,'<i>$1</i>');
+for(const l of lines){const m=l.match(/^(\s*)[-*] (.*)/);if(m){if(!ul){h+='<ul>';ul=true}h+=`<li${m[1].length?' class="sub"':''}>${inl(m[2])}</li>`;continue}if(ul){h+='</ul>';ul=false}
+if(/^### /.test(l))h+=`<h5>${inl(l.slice(4))}</h5>`;else if(/^## /.test(l))h+=`<h4>${inl(l.slice(3))}</h4>`;else if(l.trim())h+=`<p>${inl(l)}</p>`}return h+(ul?'</ul>':'')}
+let HBQ='';
+function vHandbuch(){const W=S.wis.slice().sort((a,b)=>(a.ordnung||99)-(b.ordnung||99)||String(a.titel).localeCompare(b.titel));const w=HBQ.toLowerCase().split(/\s+/).filter(Boolean);
+const V=W.filter(c=>w.every(x=>(c.titel+' '+c.text).toLowerCase().includes(x)));const last=Math.max(0,...W.map(c=>c.updatedAt||0));
+return `<h2>Handbuch</h2><p class="mut">Entscheide, Regeln, Fristen und Abläufe – alles, was man ausser den Zahlen wissen muss. Für Annika, für den Notfall und für jede andere KI.${last?' Stand: '+new Date(last).toLocaleDateString('de-CH'):''}</p>
+<div class="row" style="gap:8px;flex-wrap:wrap"><button id="hbexp">Handbuch exportieren (.md)</button><button class="ghost" id="hbnew">Kapitel hinzufügen</button></div>
+<label style="margin-top:10px">Suchen<input id="hbq" value="${esc(HBQ)}" placeholder="z. B. 3a, Frist, Hypothek"></label>
+${V.length?V.map(c=>`<details class="card hb" ${w.length||V.length===1?'open':''}><summary><b>${esc(c.titel)}</b></summary><div class="hbt">${mdHtml(c.text)}</div><div class="row" style="justify-content:flex-end"><button class="ghost" data-hb="${esc(c._id)}">Bearbeiten</button></div></details>`).join(''):'<div class="empty">'+(W.length?'Nichts gefunden.':'Noch leer – Claude füllt das Handbuch beim nächsten «Eingang verarbeiten».')+'</div>'}`}
+function hbForm(c){c=c||{ordnung:50};form(c._id?'Kapitel bearbeiten':'Neues Kapitel',[['titel','Titel'],['ordnung','Reihenfolge (Zahl)','number'],['text','Inhalt (## Überschrift, - Aufzählung, **fett**)','area']],c,o=>put('wissen',c._id,{...c,...o}),c._id&&(()=>delDoc('wissen',c._id)));const t=$('#frm textarea[name=text]');if(t)t.rows=16}
+function hbExport(){const W=S.wis.slice().sort((a,b)=>(a.ordnung||99)-(b.ordnung||99));const d=new Date().toLocaleDateString('de-CH');
+const md=`# Handbuch Familienfinanzen Gerber\n\nStand ${d}. Daten: Google Drive «Familienfinanzen Gerber» (daten.json, Belege, Dokumente, Backups).\n\n`+W.map(c=>`# ${c.titel}\n\n${c.text}\n`).join('\n');
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download=`Handbuch_Familienfinanzen_${new Date().toISOString().slice(0,10)}.md`;a.click()}
+let hbT=null;function bindHandbuch(){if(view!=='handbuch')return;const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};on('#hbexp',hbExport);on('#hbnew',()=>hbForm());
+$('#main').querySelectorAll('[data-hb]').forEach(b=>b.onclick=()=>hbForm(S.wis.find(x=>x._id===b.dataset.hb)));
+const i=$('#hbq');if(i)i.oninput=()=>{clearTimeout(hbT);hbT=setTimeout(()=>{HBQ=i.value;render();const j=$('#hbq');if(j){j.focus();j.setSelectionRange(j.value.length,j.value.length)}},300)}}
 
 /* ===== Wer zahlt was ===== */
 const payer=t=>{if(t.bezahltVon)return t.bezahltVon;const a=S.acc.find(x=>x._id===t.konto);return a?(a.zahltFuer||a.inhaber||'Unbekannt'):'Unbekannt'};
